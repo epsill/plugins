@@ -1,11 +1,11 @@
 ## Альтернативный магазин плагинов:
-* mod.js 
+* https://epsill.github.io/plugins/mod.js 
 ## Плагин переключения парсеров: 
-* jac.js
+* https://epsill.github.io/plugins/jac.js
 ## Удаляет Трейлеры: 
-* notrailer.js
+* https://epsill.github.io/plugins/notrailer.js
 
 ## Плагин смены сервера приложения: 
-* redirect.js
+* https://epsill.github.io/plugins/redirect.js
 ## Плагин заменяет название аудиодорожек и субтитров в плеере, плагин работает только в торрентах:
-* tricks.js
+* https://epsill.github.io/plugins/tricks.js
