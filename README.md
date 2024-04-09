@@ -9,3 +9,5 @@
 * https://epsill.github.io/plugins/redirect.js
 ## Плагин заменяет название аудиодорожек и субтитров в плеере, плагин работает только в торрентах:
 * https://epsill.github.io/plugins/tricks.js
+## Приятные мелочи
+
