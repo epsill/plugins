@@ -10,5 +10,6 @@
 ### Приятные мелочи
 * https://epsill.github.io/plugins/tricks.js
 ### Добавляет пункты парсер и торрент 
-*
+* https://epsill.github.io/plugins/etor.js
+
 
