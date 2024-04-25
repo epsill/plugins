@@ -9,5 +9,6 @@
 * https://epsill.github.io/plugins/redirect.js
 ### Приятные мелочи
 * https://epsill.github.io/plugins/tricks.js
-
+### Добавляет пункты парсер и торрент 
+*
 
