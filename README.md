@@ -7,9 +7,10 @@
 * https://epsill.github.io/plugins/notrailer.js
 ### Плагин смены сервера приложения: 
 * https://epsill.github.io/plugins/redirect.js
-### Приятные мелочи
+### Приятные мелочи:
 * https://epsill.github.io/plugins/tricks.js
-### Добавляет пункты парсер и торрент 
+### Добавляет пункты парсер и торрент:
 * https://epsill.github.io/plugins/etor.js
-
+### Отображение звуковых дорожек:
+* https://epsill.github.io/plugins/tracks.js
 
