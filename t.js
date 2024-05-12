@@ -1,0 +1,1 @@
+$('.view--torrent').appendTo('body');
