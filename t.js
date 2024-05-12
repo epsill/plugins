@@ -1,6 +1,7 @@
-(function() {
-	'use strict';
-
-Lampa.Platform.tv();
-
-$('.view--torrent').appendTo('body');
+Lampa.Listener.follow('full', function(e) {
+      if (e.type == 'complite') {
+       setTimeout(function(){
+$('.view--torrent').insertAfter($('.button--play').last());
+       },10);
+     }
+  })
