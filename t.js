@@ -7,7 +7,7 @@ Lampa.Listener.follow('full', function(e) {
         var $firstChild = $parent.children().first();
 
         if (!$torrentButton.is($firstChild)) {
-          $torrentButton.prependTo($parent);
+          $torrentButton.prepend($parent);
         }
       });
     }, 10);
