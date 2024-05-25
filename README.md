@@ -13,4 +13,6 @@
 * https://epsill.github.io/plugins/etor.js
 ### Отображение звуковых дорожек:
 * https://epsill.github.io/plugins/tracks.js
+### делает каточку первой на старом интерфейсе
+*https://epsill.github.io/plugins/t.js
 
