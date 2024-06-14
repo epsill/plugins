@@ -1,0 +1,35 @@
+{
+  "paging": {
+    "page": 1,
+    "count": 1,
+    "maxPage": 1,
+    "itemsTotal": 1
+  },
+  "packages": [
+ 
+ {
+      "id": "com.bylampa.stream",
+      "title": "byampa",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "com.bylampa.stream",
+        "version": "1.0.4",
+        "type": "web",
+        "title": "bylampa",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://epsill.github.io/plugins/bylampa.ipk",
+        "ipkHash": {
+          "sha256": "69b126bee14f9c38e787774dc0d0c41b3dae934544033cd87af43e86e70cddaf"
+        },
+        "ipkSize": 7021158
+      },
+      "pool": "main",
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    },
+...
+ ]
+}
