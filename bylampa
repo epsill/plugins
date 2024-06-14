@@ -29,7 +29,214 @@
       "pool": "main",
       "shortDescription": "",
       "fullDescriptionUrl": ""
+},
+    {
+      "id": "torrserv.matrix.app",
+      "title": "Torrserver MatriX",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "torrserv.matrix.app",
+        "version": "0.3.6",
+        "type": "web",
+        "title": "Torrserver MatriX",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/e2rbu3ixxefzhxo6nxbfc/torrserv.matrix.app_0.3.6_all.ipk?rlkey=tkhqd93iqgm8st3680sq2urbj&dl=1",
+        "ipkHash": {
+          "sha256": "013e98c0f0d39f2351961f1a292db0f043ff61354e39e89813dfc4ca19a74fb0"
+        },
+        "ipkSize": 14572046 
+      },
+
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
     },
-...
- ]
+    {
+      "id": "youtube.leanback.v4",
+      "title": "YouTube AdFree",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "youtube.leanback.v4",
+        "version": "0.3.4",
+        "type": "web",
+        "title": "YouTube AdFree",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/y97bq84u98vhunfdz9lcf/youtube.leanback.v4_0.3.4_all.ipk?rlkey=hmc0ib9vs06odulilxncn0dbp&dl=1",
+        "ipkHash": {
+          "sha256": "19d415a11fcfa4f34eae01b88401c9e6963f00e09cc402d1f659bdab60cd11c6"
+        },
+        "ipkSize": 345516 
+      },
+
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    },
+    {
+      "id": "com.685631.3411",
+      "title": "Kinopoisk",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "com.685631.3411",
+        "version": "10.140.0",
+        "type": "web",
+        "title": "Kinopoisk",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/4di5zbxke7iatc2z9fox5/kinopoisk.ipk?rlkey=8988ze0ipypz3yfnoo2yrwx9r&dl=1",
+        "ipkHash": {
+          "sha256": "95a0dbcbdf47888f83de8362333f806c6fafdc9527968ab78c59e995caf6c73c"
+        },
+        "ipkSize":  2076526
+      },
+
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    },
+    {
+      "id": "com.ottplay.app",
+      "title": "Ott-play",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "com.ottplay.app",
+        "version": "0.2.2",
+        "type": "web",
+        "title": "Ott-play",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/s0hk929vruv3vsqp8c5sw/com.ottplay.app_0.2.2_all.ipk?rlkey=k4mtr4z5vv09e4t6xpcobp7pi&dl=1",
+        "ipkHash": {
+          "sha256": "edc75d1b0606f81c3b930457643b2f0c314c0e64d536390b4019b30d45735199"
+        },
+        "ipkSize":  329544
+      },
+
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    },
+    {
+      "id": "org.webosbrew.hyperhdr.loader",
+      "title": "HyperHDR",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "org.webosbrew.hyperhdr.loader",
+        "version": "0.1.9",
+        "type": "web",
+        "title": "HyperHDR",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/lbub10vgisyzjletxpp1o/HyperHDR.ipk?rlkey=42uvsshsetmnphodz902nnv4t&dl=1",
+        "ipkHash": {
+          "sha256": "a93bceb52a0765a8c816c1c8dd4298bab877339573756f47895d118318b04f2f"
+        },
+        "ipkSize":  40288992
+      },
+ 
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    },
+  {
+      "id": "ui30",
+      "title": "Piccap On/Off Remote",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "ui30",
+        "version": "0.0.9",
+        "type": "web",
+        "title": "Piccap On/Off Remote",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/66ww4qks7agqmennql892/Piccap-OnOff.ipk?rlkey=hh7ga2py92ctoxrf1m8c3xmnn&dl=1",
+        "ipkHash": {
+          "sha256": "cbeea2a51f7b4e920965c2da51face838bec78415efed66aea4921e934286460"
+        },
+        "ipkSize":  22436
+      },
+ 
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    },
+ {
+      "id": "org.webosbrew.piccap",
+      "title": "PicCap - Hyperion Sender App",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "org.webosbrew.piccap",
+        "version": "0.4.3",
+        "type": "web",
+        "title": "PicCap - Hyperion Sender App",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/mpwgsu1x25jdclf8nf5rg/PicCap-Hyperion-Sender.ipk?rlkey=xq5z4um4vn6dnkrqd1tr6ltc7&dl=1",
+        "ipkHash": {
+          "sha256": "20634e5f63ccc609a0302d01ec835d47d167f8216ae95acfb2d1a8a94e938099"
+        },
+        "ipkSize":  1016194
+      },
+ 
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    },
+ {
+      "id": "org.webosbrew.inputhook",
+      "title": "LG Input Hook",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "org.webosbrew.inputhook",
+        "version": "1.4.0",
+        "type": "web",
+        "title": "LG Input Hook",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/20hab4607rv3uf078rcsu/org.webosbrew.inputhook_1.4.0_all.ipk?rlkey=bney9f04fhqlaenp88kstr0gs&st=2k3rzkny&dl=1",
+        "ipkHash": {
+          "sha256": "5dc3dff1fadd5da30af6f60b237282564491e62d502f2beaeca32c9febf0ecfb"
+        },
+        "ipkSize":  10967116
+      },
+ 
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    },
+ {
+      "id": "com.limelight.webos",
+      "title": "Moonlight",
+      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "manifest": {
+        "id": "com.limelight.webos",
+        "version": "1.6.18",
+        "type": "native",
+        "title": "Moonlight",
+        "appDescription": "",
+        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "sourceUrl": "",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/c8l1oqkptv5173evhsy1f/com.limelight.webos_1.6.18_arm.ipk?rlkey=fptid291kkhm6nxpqngbmmfz8&st=hykbyvwn&dl=1",
+        "ipkHash": {
+          "sha256": "cfcbb1f71db88b5d4d586bfc490bcfed2230162f12ea1852e753aebc31e4771a"
+        },
+        "ipkSize":  1488448
+      },
+ 
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    }
+  ]
 }
+
