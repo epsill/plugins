@@ -10,14 +10,14 @@
  {
       "id": "com.bylampa.stream",
       "title": "byampa",
-      "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+      "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
       "manifest": {
         "id": "com.bylampa.stream",
         "version": "1.0.4",
         "type": "web",
         "title": "bylampa",
         "appDescription": "",
-        "iconUri": "https://github.com/wals09/repo/blob/main/soon.png?raw=true",
+        "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true?raw=true",
         "sourceUrl": "",
         "rootRequired": false,
         "ipkUrl": "https://epsill.github.io/plugins/bylampa.ipk",
