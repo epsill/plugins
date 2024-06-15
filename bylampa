@@ -16,9 +16,9 @@
         "version": "1.0.4",
         "type": "web",
         "title": "bylampa",
-        "appDescription": "",
+        "appDescription": "Lampa Плагины Без Цензуры",
         "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true?raw=true",
-        "sourceUrl": "",
+        "sourceUrl": "t.me/lampa_plugins_uncensored",
         "rootRequired": false,
         "ipkUrl": "https://www.dropbox.com/scl/fi/cvwzqst6lm03ns25avm3l/bylampa.ipk?rlkey=ewlrzg6tgswcyi2iba20m26lq&st=98hz3jm4&dl=1",
         "ipkHash": {
@@ -27,8 +27,8 @@
         "ipkSize": 7021158
       },
       "pool": "main",
-      "shortDescription": "Lampa Плагины Без Цензуры",
-      "fullDescriptionUrl": "telegram channel-t.me/lampa_plugins_uncensored"
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
 
     }
   ]
