@@ -9,7 +9,7 @@
  
  {
       "id": "com.bylampa.stream",
-      "title": "byampa",
+      "title": "bylampa",
       "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
       "manifest": {
         "id": "com.bylampa.stream",
