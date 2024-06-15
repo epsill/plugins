@@ -16,7 +16,7 @@
         "version": "1.0.4",
         "type": "web",
         "title": "bylampa",
-        "appDescription": "Lampa Плагины Без Цензуры",
+        "appDescription": "Lampa Plugins Are Uncensored",
         "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true?raw=true",
         "sourceUrl": "t.me/lampa_plugins_uncensored",
         "rootRequired": false,
@@ -28,7 +28,7 @@
       },
       "pool": "main",
       "shortDescription": "",
-      "fullDescriptionUrl": ""
+      "fullDescriptionUrl": "Lampa Plugins Are Uncensored"
 
     }
   ]
