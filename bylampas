@@ -1,0 +1,58 @@
+{
+  "paging": {
+    "page": 1,
+    "count": 1,
+    "maxPage": 1,
+    "itemsTotal": 1
+  },
+  "packages": [
+ 
+ {
+      "id": "com.bylampa.stream",
+      "title": "bylampa",
+      "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
+      "manifest": {
+        "id": "com.bylampa.stream",
+        "version": "1.0.4",
+        "type": "web",
+        "title": "bylampa",
+        "Description": "Lampa Plugins Are Uncensored",
+        "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true?raw=true",
+        "sourceUrl": "t.me/lampa_plugins_uncensored",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/cvwzqst6lm03ns25avm3l/bylampa.ipk?rlkey=ewlrzg6tgswcyi2iba20m26lq&st=98hz3jm4&dl=1",
+        "ipkHash": {
+          "sha256": "1b9af396d9165cd7efc5ade617e4787a9f4f6b5fbc8e1dbdb2864a1377b1988b"
+        },
+        "ipkSize": 7021158
+      },
+      "pool": "main",
+      "shortDescription": "",
+      "fullDescriptionUrl": "Lampa Plugins Are Uncensored"
+   },
+    {
+      "id": "com.lampa.tv",
+      "title": "bylampa",
+      "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
+      "manifest": {
+        "id": "com.lampa.tv",
+        "version": "1.4.1",
+        "type": "web",
+        "title": "bylampa",
+        "appDescription": "",
+        "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
+        "sourceUrl": "t.me/lampa_plugins_uncensored",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/jf6nr4lw1aq2mibgml2ay/bylampa_2.ipk?rlkey=xccltu82tzvjxgkvy4m0e6810&st=f4fjqfus&dl=1",
+        "ipkHash": {
+          "sha256": "99eb722f3c5984f2e9e47306ebd4fb01b2387f589cb54dc8c6e35ca4755de1b1"
+        },
+        "ipkSize": 7021159
+      },
+      "pool": "main",
+      "shortDescription": "",
+      "fullDescriptionUrl": ""
+    }
+  ]
+}
+
