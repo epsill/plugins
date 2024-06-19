@@ -36,7 +36,7 @@
       "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
       "manifest": {
         "id": "com.lampa.tv",
-        "version": "1.4.2",
+        "version": "1.4.1",
         "type": "web",
         "title": "bylampa",
         "appDescription": "",
