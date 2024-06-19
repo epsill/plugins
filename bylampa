@@ -36,7 +36,7 @@
       "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
       "manifest": {
         "id": "com.lampa.tv",
-        "version": "1.4.1",
+        "version": "1.4.2",
         "type": "web",
         "title": "bylampa",
         "appDescription": "",
@@ -45,7 +45,7 @@
         "rootRequired": false,
         "ipkUrl": "https://www.dropbox.com/scl/fi/jf6nr4lw1aq2mibgml2ay/bylampa_2.ipk?rlkey=xccltu82tzvjxgkvy4m0e6810&st=f4fjqfus&dl=1",
         "ipkHash": {
-          "sha256": "99eb722f3c5984f2e9e47306ebd4fb01b2387f589cb54dc8c6e35ca4755de1b1"
+          "sha256": "067dc659ee3df1bc563c478e85f748dd16d977577608fb9a00f07be3ad86e8f1"
         },
         "ipkSize": 7021159
       },
