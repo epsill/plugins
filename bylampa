@@ -8,29 +8,7 @@
   "packages": [
  
  {
-      "id": "com.bylampa.stream",
-      "title": "bylampa",
-      "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
-      "manifest": {
-        "id": "com.bylampa.stream",
-        "version": "1.0.4",
-        "type": "web",
-        "title": "bylampa",
-        "Description": "Lampa Plugins Are Uncensored",
-        "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true?raw=true",
-        "sourceUrl": "t.me/lampa_plugins_uncensored",
-        "rootRequired": false,
-        "ipkUrl": "https://www.dropbox.com/scl/fi/cvwzqst6lm03ns25avm3l/bylampa.ipk?rlkey=ewlrzg6tgswcyi2iba20m26lq&st=98hz3jm4&dl=1",
-        "ipkHash": {
-          "sha256": "1b9af396d9165cd7efc5ade617e4787a9f4f6b5fbc8e1dbdb2864a1377b1988b"
-        },
-        "ipkSize": 7066954
-      },
-      "pool": "main",
-      "shortDescription": "",
-      "fullDescriptionUrl": "https://epsill.github.io/plugins/index.html"
-   },
-    {
+      
       "id": "com.lampa.tv",
       "title": "bylampa",
       "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
