@@ -8,11 +8,11 @@
   "packages": [
  
  {
-      "id": "com.bylampa.stream",
+      "id": "bylampa.tv",
       "title": "bylampa",
       "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
       "manifest": {
-        "id": "com.bylampa.stream",
+        "id": "bylampa.tv",
         "version": "1.0.4",
         "type": "web",
         "title": "bylampa",
@@ -22,9 +22,9 @@
         "rootRequired": false,
         "ipkUrl": "https://www.dropbox.com/scl/fi/cvwzqst6lm03ns25avm3l/bylampa.ipk?rlkey=ewlrzg6tgswcyi2iba20m26lq&st=98hz3jm4&dl=1",
         "ipkHash": {
-          "sha256": "1b9af396d9165cd7efc5ade617e4787a9f4f6b5fbc8e1dbdb2864a1377b1988b"
+          "sha256": "8a1d11d5883450d9131e069e3e4af01d1de42e7a1a040f69c5294aefdc6abce3"
         },
-        "ipkSize": 7021158
+        "ipkSize": 70656660 
       },
       "pool": "main",
       "shortDescription": "",
