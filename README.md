@@ -4,7 +4,7 @@
 ### Плагин переключения парсеров: 
 * https://epsill.github.io/plugins/jac.js
 ### Удаляет Трейлеры: 
-* https://epsill.github.io/plugins/notrailer.js
+* https://epsill.github.io/plugins/notr.js
 ### Плагин смены сервера приложения: 
 * https://epsill.github.io/plugins/redirect.js
 ### Приятные мелочи:
