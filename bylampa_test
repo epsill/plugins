@@ -30,6 +30,29 @@
       "pool": "main",
       "shortDescription": "",
       "fullDescriptionUrl": "https://epsill.github.io/plugins/index.html"
+   },
+      {  
+      "id": "mybylampa.tv",
+      "title": "lampa+",
+      "iconUri": "https://epsill.github.io/repo/sd.png?raw=true",
+      "manifest": {
+        "id": "mybylampa.tv",
+        "version": "1.3.5",
+        "type": "web",
+        "title": "lampa+",
+        "appDescription": "",
+        "iconUri": "https://epsill.github.io/repo/sd.png?raw=true",
+        "sourceUrl": "t.me/lampa_plugins_uncensored",
+        "rootRequired": false,
+        "ipkUrl": "https://www.dropbox.com/scl/fi/ii7t1vz2ekhpnnj6385za/lampa-1.3.5.ipk?rlkey=3rs4teh0t9j75yld3rx85vp26&st=r7u2j1a3&dl=1",
+        "ipkHash": {
+          "sha256": "9019fa5259494f6527576a60c48ef61548271ab0d1073e5a7846cdadd4801bf5"
+        },
+        "ipkSize": 8093696
+      },
+      "pool": "main",
+      "shortDescription": "",
+      "fullDescriptionUrl": "https://epsill.github.io/repo/index.html"
     }
   ]
 }
