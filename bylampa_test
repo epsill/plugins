@@ -1,4 +1,4 @@
-{
+  {
   "paging": {
     "page": 1,
     "count": 1,
@@ -14,23 +14,23 @@
       "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
       "manifest": {
         "id": "bylampa.tv",
-        "version": "1.4.2",
+        "version": "2.3.0",
         "type": "web",
         "title": "bylampa",
         "appDescription": "",
         "iconUri": "https://epsill.github.io/plugins/sd.png?raw=true",
         "sourceUrl": "t.me/lampa_plugins_uncensored",
         "rootRequired": false,
-        "ipkUrl": "https://www.dropbox.com/scl/fi/1gxfvamy1et7fgwkf4all/bylampa_id.ipk?rlkey=toq5t527cpzlsr76et7ogysj3&st=7yi0jyt7&dl=1",
+        "ipkUrl": "https://www.dropbox.com/scl/fi/9jlzfpgg1xj6qb4p0zjic/bylampa_2.3.0.ipk?rlkey=ecz1d7g0hzp4qjgwoul5j62hx&st=5apvwdo5&dl=1",
         "ipkHash": {
-          "sha256": "8a1d11d5883450d9131e069e3e4af01d1de42e7a1a040f69c5294aefdc6abce3"
+          "sha256": "62ddcf588df8010a3c10bda55546aee3c0fd7c16e222368b2c3da00e8635fc55"
         },
-        "ipkSize": 7121159
+        "ipkSize": 6557696
       },
       "pool": "main",
       "shortDescription": "",
       "fullDescriptionUrl": "https://epsill.github.io/plugins/index.html"
-   },
+        },
       {  
       "id": "mybylampa.tv",
       "title": "lampa+",
@@ -56,4 +56,5 @@
     }
   ]
 }
+
 
