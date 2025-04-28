@@ -44,7 +44,7 @@
                 type: 'input',
                 values: '',
                 placeholder: 'Например: bylampa.online',
-                default: 'bylampa.online'
+                default: 'my.bylampa.online'
             },
             field: {
                 name: 'Адрес сервера',
