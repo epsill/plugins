@@ -1,3 +1,6 @@
+// Определение иконки для кнопки редиректа
+var icon_server_redirect = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2L2 12h3v8h8v-3h4l10-10L12 2z"/></svg>'; // Пример SVG-иконки
+
 function startMe() {
     $('#REDIRECT').remove();
 
