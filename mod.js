@@ -1,10 +1,13 @@
 (function () {
     'use strict';
 
+    // Cache WebOS check
+    var isWebOS = navigator.userAgent.match(/WebOS|webOS|webos|WEBOS/i) ? true : false;
+
     // Основной объект плагина
     var InterFaceMod = {
         name: 'interface_mod',
-        version: '2.2.1', // Обновленная версия
+        version: '2.2.2', // Updated version
         debug: false,
         settings: {
             enabled: true,
@@ -17,37 +20,30 @@
             label_position: 'top-right',
             show_buttons: true,
             colored_elements: true,
-            webos_simple_mode: true // Новая настройка для WebOS
+            webos_simple_mode: isWebOS // Default to true if WebOS
         }
     };
 
-    // Функция для проверки WebOS
-    function isWebOS() {
-        return navigator.userAgent.match(/WebOS|webOS|webos|WEBOS/i);
-    }
-
-    // Упрощенные стили для WebOS
-    function getWebOSCompatibleStyles() {
-        return {
-            label: {
-                'position': 'absolute',
-                'background-color': 'rgba(33, 150, 243, 0.9)',
-                'color': 'white',
-                'padding': '0.4em 0.6em',
-                'border-radius': '0.3em',
-                'font-size': '0.8em',
-                'z-index': '999',
-                'text-align': 'center',
-                'white-space': 'nowrap',
-                'line-height': '1.2em'
-            },
-            buttons: {
-                'display': 'flex',
-                'flex-wrap': 'wrap',
-                'gap': '10px'
-            }
-        };
-    }
+    // Упрощенные стили для WebOS - moved to top level for better performance
+    var webOSStyles = {
+        label: {
+            'position': 'absolute',
+            'background-color': 'rgba(33, 150, 243, 0.9)',
+            'color': 'white',
+            'padding': '0.4em 0.6em',
+            'border-radius': '0.3em',
+            'font-size': '0.8em',
+            'z-index': '999',
+            'text-align': 'center',
+            'white-space': 'nowrap',
+            'line-height': '1.2em'
+        },
+        buttons: {
+            'display': 'flex',
+            'flex-wrap': 'wrap',
+            'gap': '10px'
+        }
+    };
 
     // Модифицированная функция добавления информации о сезонах
     function addSeasonInfo() {
@@ -60,7 +56,7 @@
                 var totalSeasons = movie.number_of_seasons || 0;
                 var totalEpisodes = movie.number_of_episodes || 0;
                 
-                // Упрощенный расчет для WebOS
+                // Calculate aired seasons/episodes
                 var airedSeasons = totalSeasons;
                 var airedEpisodes = totalEpisodes;
                 
@@ -82,10 +78,10 @@
                     });
                 }
 
-                // Создаем элемент с упрощенными стилями
+                // Create info element
                 var infoElement = $('<div class="season-info-label"></div>');
-                var styles = InterFaceMod.settings.webos_simple_mode && isWebOS() ? 
-                    getWebOSCompatibleStyles().label : {
+                var styles = InterFaceMod.settings.webos_simple_mode && isWebOS ? 
+                    webOSStyles.label : {
                         'position': 'absolute',
                         'background-color': status === 'Ended' || status === 'Canceled' ? 
                             'rgba(33, 150, 243, 0.8)' : 'rgba(244, 67, 54, 0.8)',
@@ -102,99 +98,69 @@
 
                 infoElement.css(styles);
                 
-                // Добавляем текст
+                // Add text (fixed syntax error)
                 var text = airedSeasons + ' сез. ' + airedEpisodes + ' сер.';
-                if (!(status === 'Ended' || status === 'Canceled') {
+                if (status !== 'Ended' && status !== 'Canceled') {
                     text += ' из ' + totalEpisodes;
                 }
                 infoElement.text(text);
 
-                // Добавляем на постер
-                setTimeout(function() {
+                // Add to poster with requestAnimationFrame for better performance
+                requestAnimationFrame(function() {
                     var poster = $(data.object.activity.render()).find('.full-start-new__poster, .full-start__poster').first();
                     if (poster.length) {
                         poster.css('position', 'relative');
                         poster.append(infoElement);
                     }
-                }, 100);
+                });
             }
         });
     }
 
-    // Упрощенная функция для отображения кнопок
+    // Optimized button display function
     function showAllButtons() {
-        var style = document.createElement('style');
+        var style = document.getElementById('interface_mod_buttons_style') || document.createElement('style');
         style.id = 'interface_mod_buttons_style';
         
-        var css = InterFaceMod.settings.webos_simple_mode && isWebOS() ? 
+        var css = InterFaceMod.settings.webos_simple_mode && isWebOS ? 
             '.full-start-new__buttons, .full-start__buttons { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }' :
             '.full-start-new__buttons, .full-start__buttons { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; }';
         
         style.innerHTML = css;
-        document.head.appendChild(style);
-    }
-
-    // Упрощенные темы для WebOS
-    function applyTheme(theme) {
-        $('#interface_mod_theme').remove();
-        if (theme === 'default') return;
-
-        var style = $('<style id="interface_mod_theme"></style>');
-        var themes = {
-            // Упрощенная тема для WebOS
-            webos_simple: `
-                .menu__item.focus, .menu__item.traverse, .menu__item.hover {
-                    background: #3498db;
-                    color: #fff;
-                }
-                .card.focus .card__view::after {
-                    border: 2px solid #3498db;
-                }
-            `,
-            // Остальные темы...
-        };
-
-        // Для WebOS используем упрощенную тему
-        if (isWebOS()) {
-            theme = 'webos_simple';
+        if (!document.getElementById('interface_mod_buttons_style')) {
+            document.head.appendChild(style);
         }
-
-        style.html(themes[theme] || '');
-        $('head').append(style);
     }
 
-    // Добавляем настройку для WebOS
+    // Start plugin function
     function startPlugin() {
-        // Автоматически включаем простой режим для WebOS
-        if (isWebOS()) {
-            InterFaceMod.settings.webos_simple_mode = true;
+        // Add WebOS setting
+        if (isWebOS) {
+            Lampa.SettingsApi.addParam({
+                component: 'season_info',
+                param: {
+                    name: 'webos_simple_mode',
+                    type: 'trigger',
+                    default: true
+                },
+                field: {
+                    name: 'Упрощенный режим для WebOS',
+                    description: 'Упрощает анимации и эффекты для лучшей совместимости'
+                },
+                onChange: function (value) {
+                    InterFaceMod.settings.webos_simple_mode = value;
+                    Lampa.Settings.update();
+                    setTimeout(() => location.reload(), 300); // Smooth reload
+                }
+            });
         }
 
-        // Добавляем параметр в настройки
-        Lampa.SettingsApi.addParam({
-            component: 'season_info',
-            param: {
-                name: 'webos_simple_mode',
-                type: 'trigger',
-                default: isWebOS() // Включено по умолчанию для WebOS
-            },
-            field: {
-                name: 'Упрощенный режим для WebOS',
-                description: 'Упрощает анимации и эффекты для лучшей совместимости'
-            },
-            onChange: function (value) {
-                InterFaceMod.settings.webos_simple_mode = value;
-                Lampa.Settings.update();
-                location.reload(); // Перезагружаем для применения изменений
-            }
-        });
-
-        // Остальной код инициализации...
+        // Initialize other plugin features
+        addSeasonInfo();
+        showAllButtons();
     }
 
-    // Остальные функции плагина...
-
-    // Запуск плагина
+    // Plugin initialization
     if (window.appready) {
         startPlugin();
     } else {
