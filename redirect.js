@@ -5,27 +5,17 @@
     
     var server_protocol = location.protocol === "https:" ? 'https://' : 'http://';
     
-    // Стильная SVG-иконка для редиректа (ES5-совместимый синтаксис)
-    var icon_server_redirect = '<svg width="256" height="256" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-        '<path d="M18 12L12 6M18 12L12 18M18 12H6" ' +
-              'stroke="currentColor" ' +
-              'stroke-width="1.8" ' +
-              'stroke-linecap="round" ' +
-              'stroke-linejoin="round"/>' +
-        '<circle cx="12" cy="12" r="3.5" ' +
-                'stroke="currentColor" ' +
-                'stroke-width="1.3" ' +
-                'fill="none"/>' +
-        '<circle cx="12" cy="9.5" r="1" fill="currentColor"/>' +
-        '<circle cx="12" cy="12.5" r="1" fill="currentColor"/>' +
-        '<circle cx="12" cy="15.5" r="1" fill="currentColor"/>' +
-    '</svg>';
+    // Крупная SVG-иконка с "70%" (размер увеличен на 30%)
+    var icon_server_redirect = '<svg width="332" height="332" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/>' +
+        '<text x="12" y="16" font-family="Arial" font-size="10" font-weight="bold" text-anchor="middle" fill="currentColor">70%</text>' +
+        '</svg>';
 
     function startMe() {
         $('#REDIRECT').remove();
         
         var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen" ' +
-                         'style="transition: all 0.25s ease; opacity: 0.9;">' +
+                         'style="width: 38px; height: 38px; transition: all 0.2s ease;">' +
                             icon_server_redirect +
                          '</div>';
         
@@ -38,31 +28,25 @@
             }, 10);
         }
         
-        // Плавные hover-эффекты
+        // Увеличение при фокусе (для TV)
         $('#REDIRECT')
-            .on('mouseenter', function() {
+            .on('hover:enter', function() {
                 $(this).css({
-                    'transform': 'scale(1.15)',
-                    'opacity': '1',
-                    'filter': 'drop-shadow(0 0 8px rgba(100, 149, 237, 0.8))'
+                    'transform': 'scale(1.3)',
+                    'filter': 'drop-shadow(0 0 6px rgba(0, 150, 255, 0.7))'
                 });
             })
-            .on('mouseleave', function() {
+            .on('hover:leave', function() {
                 $(this).css({
                     'transform': 'scale(1)',
-                    'opacity': '0.9',
                     'filter': 'none'
                 });
             })
-            .on('hover:enter hover:click hover:touch', function() {
-                var $this = $(this);
-                $this.css('transform', 'scale(0.95)');
-                setTimeout(function() {
-                    window.location.href = server_protocol + Lampa.Storage.get('location_server');
-                }, 200);
+            .on('hover:click hover:touch', function() {
+                window.location.href = server_protocol + Lampa.Storage.get('location_server');
             });
      
-        // Настройки в интерфейсе
+        // Настройки
         Lampa.SettingsApi.addComponent({
             component: 'location_redirect',
             name: 'Смена сервера',
@@ -104,14 +88,12 @@
             }
         });
 
-        // Отключение постоянного редиректа
         Lampa.Keypad.listener.follow("keydown", function(e) {
             if (e.code === 40 || e.code === 29461) {
                 Lampa.Storage.set('const_redirect', false);
             } 
         });
 
-        // Автоматический редирект если включен
         setTimeout(function() {
             if (Lampa.Storage.field('const_redirect') === true) {
                 window.location.href = server_protocol + Lampa.Storage.get('location_server');
@@ -119,7 +101,6 @@
         }, 300);
     }
     
-    // Запуск
     if (window.appready) {
         startMe();
     } else {
