@@ -1,74 +1,85 @@
 (function() {
     'use strict';
 
-    // 1. Ожидание загрузки Lampa
-    function waitForLampa(callback) {
-        if (typeof Lampa !== 'undefined') {
-            callback();
-        } else {
-            setTimeout(() => waitForLampa(callback), 100);
+    // 1. Инициализация плагина
+    function initPlugin() {
+        // Проверяем, что Lampa загружена
+        if (typeof Lampa === 'undefined') {
+            setTimeout(initPlugin, 100);
+            return;
         }
-    }
 
-    waitForLampa(() => {
-        // 2. Инициализация TV-режима
+        // Включаем TV-режим
         Lampa.Platform.tv();
 
-        // 3. Конфигурация серверов
+        // 2. Конфигурация серверов
         const servers = [
-            { name: 'Сервер 1', url: 'http://185.105.117.217:12160/' },
-            { name: 'Сервер 2', url: 'http://my.bylampa.online/' },
-            { name: 'Сервер 3', url: 'http://bylampa.online/' }
+            { 
+                id: 'server1',
+                name: 'Сервер 1', 
+                url: 'http://185.105.117.217:12160/',
+                testPath: '/ping'
+            },
+            { 
+                id: 'server2',
+                name: 'Сервер 2', 
+                url: 'http://my.bylampa.online/',
+                testPath: '/ping'
+            },
+            { 
+                id: 'server3',
+                name: 'Сервер 3', 
+                url: 'http://bylampa.online/',
+                testPath: '/ping'
+            }
         ];
 
-        // 4. Состояние плагина
+        // 3. Состояние плагина
         const state = {
             currentSelection: 0,
             menuActive: false,
             keyHoldTimer: null,
-            storageKey: 'lampa_redirect_last_server'
+            storageKey: 'lampa_redirect_last_server_v2'
         };
 
-        // 5. Работа с хранилищем
+        // 4. Управление хранилищем
         const storage = {
             get: () => {
-                const saved = localStorage.getItem(state.storageKey);
-                if (saved) {
-                    try {
-                        return JSON.parse(saved);
-                    } catch (e) {
-                        return null;
-                    }
+                try {
+                    const saved = localStorage.getItem(state.storageKey);
+                    return saved ? JSON.parse(saved) : null;
+                } catch (e) {
+                    return null;
                 }
-                return null;
             },
             set: (server) => {
                 localStorage.setItem(state.storageKey, JSON.stringify(server));
+            },
+            clear: () => {
+                localStorage.removeItem(state.storageKey);
             }
         };
 
-        // 6. Проверка доступности сервера
-        function checkServer(url) {
-            return new Promise((resolve) => {
-                const xhr = new XMLHttpRequest();
-                xhr.timeout = 3000;
-                xhr.open('GET', url + '?check=' + Date.now(), true);
-                xhr.onload = () => resolve(xhr.status < 400);
-                xhr.onerror = () => resolve(false);
-                xhr.ontimeout = () => resolve(false);
-                try {
-                    xhr.send();
-                } catch (e) {
-                    resolve(false);
-                }
-            });
+        // 5. Проверка доступности сервера
+        async function checkServer(server) {
+            try {
+                const testUrl = server.url + (server.testPath || '/ping') + '?t=' + Date.now();
+                const response = await fetch(testUrl, {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-store'
+                });
+                return true;
+            } catch (e) {
+                return false;
+            }
         }
 
-        // 7. Управление меню
+        // 6. Управление меню выбора
         function showMenu() {
             if (state.menuActive) return;
-
-            // Создаем меню
+            
+            // Создаем элемент меню
             const menu = document.createElement('div');
             menu.id = 'server-selection-menu';
             menu.style.cssText = `
@@ -77,7 +88,7 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0,0,0,0.9);
+                background: rgba(0,0,0,0.95);
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -88,29 +99,37 @@
             // Заголовок
             const title = document.createElement('div');
             title.textContent = 'Выберите сервер';
-            title.style.cssText = 'color: white; font-size: 24px; margin-bottom: 30px;';
+            title.style.cssText = 'color: white; font-size: 28px; margin-bottom: 30px;';
             menu.appendChild(title);
 
             // Кнопки серверов
             servers.forEach((server, index) => {
                 const btn = document.createElement('button');
+                btn.id = server.id;
                 btn.textContent = `${server.name} (${new URL(server.url).host})`;
-                btn.dataset.index = index;
                 btn.style.cssText = `
-                    margin: 10px;
-                    padding: 15px 30px;
-                    font-size: 20px;
-                    min-width: 300px;
-                    background: #333;
+                    margin: 15px;
+                    padding: 20px 40px;
+                    font-size: 22px;
+                    min-width: 350px;
+                    background: ${index === 0 ? '#4CAF50' : '#333'};
                     color: white;
                     border: none;
-                    border-radius: 5px;
+                    border-radius: 8px;
                     cursor: pointer;
                     position: relative;
+                    transition: all 0.3s;
                 `;
 
+                // Индикатор статуса
+                const status = document.createElement('span');
+                status.style.cssText = 'position: absolute; right: 15px; top: 50%; transform: translateY(-50%);';
+                status.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#777"/></svg>';
+                btn.appendChild(status);
+
                 // Проверка доступности
-                checkServer(server.url).then(available => {
+                checkServer(server).then(available => {
+                    status.querySelector('circle').setAttribute('fill', available ? '#4CAF50' : '#f44336');
                     if (!available) {
                         btn.style.opacity = '0.6';
                         btn.title = 'Сервер недоступен';
@@ -123,6 +142,7 @@
 
             document.body.appendChild(menu);
             state.menuActive = true;
+            state.currentSelection = 0;
             updateSelection();
         }
 
@@ -132,29 +152,11 @@
             state.menuActive = false;
         }
 
-        // 8. Выбор сервера
-        function selectServer(server) {
-            storage.set(server);
-            
-            // Специальная обработка для WebOS
-            if (/WebOS/i.test(navigator.userAgent)) {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = server.url;
-                document.body.appendChild(iframe);
-                setTimeout(() => {
-                    window.location.href = server.url;
-                }, 1000);
-            } else {
-                window.location.href = server.url;
-            }
-        }
-
-        // 9. Навигация по меню
         function updateSelection() {
             const buttons = document.querySelectorAll('#server-selection-menu button');
             buttons.forEach((btn, index) => {
                 btn.style.backgroundColor = index === state.currentSelection ? '#4CAF50' : '#333';
+                btn.style.transform = index === state.currentSelection ? 'scale(1.05)' : 'scale(1)';
             });
         }
 
@@ -163,13 +165,46 @@
             updateSelection();
         }
 
-        // 10. Обработчики событий
-        function onKeyDown(e) {
-            // Удержание DOWN для открытия меню
+        // 7. Выбор сервера
+        async function selectServer(server) {
+            // Сохраняем выбор
+            storage.set(server);
+            
+            // Показываем статус загрузки
+            const status = document.createElement('div');
+            status.textContent = 'Переход на сервер...';
+            status.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: white;
+                font-size: 24px;
+                z-index: 10000;
+            `;
+            document.body.appendChild(status);
+
+            // Для WebOS используем iframe
+            if (/WebOS/i.test(navigator.userAgent)) {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = server.url;
+                document.body.appendChild(iframe);
+            }
+
+            // Переход с задержкой
+            setTimeout(() => {
+                window.location.href = server.url;
+            }, 1000);
+        }
+
+        // 8. Обработчики событий
+        function handleKeyDown(e) {
+            // Удержание DOWN (2 секунды) для открытия меню
             if (e.key === 'ArrowDown' && !state.menuActive) {
                 state.keyHoldTimer = setTimeout(() => {
                     showMenu();
-                }, 1000);
+                }, 2000);
             }
 
             // Навигация в меню
@@ -190,13 +225,13 @@
             }
         }
 
-        function onKeyUp(e) {
+        function handleKeyUp(e) {
             if (e.key === 'ArrowDown') {
                 clearTimeout(state.keyHoldTimer);
             }
         }
 
-        // 11. Добавление кнопки в интерфейс
+        // 9. Добавление кнопки в интерфейс
         function addInterfaceButton() {
             const buttonExists = document.getElementById('lampa-server-switcher');
             if (buttonExists) return;
@@ -210,10 +245,19 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 20px;
+                font-size: 24px;
                 cursor: pointer;
-                margin-left: 15px;
+                margin-left: 20px;
+                transition: transform 0.3s;
             `;
+
+            btn.addEventListener('mouseover', () => {
+                btn.style.transform = 'scale(1.2)';
+            });
+
+            btn.addEventListener('mouseout', () => {
+                btn.style.transform = 'scale(1)';
+            });
 
             btn.addEventListener('click', showMenu);
             
@@ -225,31 +269,44 @@
             }
         }
 
-        // 12. Инициализация плагина
-        function init() {
-            // Обработчики клавиш
-            document.addEventListener('keydown', onKeyDown);
-            document.addEventListener('keyup', onKeyUp);
-
-            // Кнопка в интерфейсе
+        // 10. Основная логика запуска
+        async function start() {
+            // Регистрируем обработчики
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            
+            // Добавляем кнопку в интерфейс
             addInterfaceButton();
 
-            // Проверка сохраненного сервера
+            // Проверяем сохраненный сервер
             const savedServer = storage.get();
             if (savedServer) {
-                checkServer(savedServer.url).then(available => {
-                    if (!available) showMenu();
-                });
+                const isAvailable = await checkServer(savedServer);
+                if (!isAvailable) {
+                    showMenu();
+                }
             } else {
                 showMenu();
             }
         }
 
-        // Запуск после полной загрузки
+        // Запускаем после полной загрузки
         if (document.readyState === 'complete') {
-            init();
+            start();
         } else {
-            window.addEventListener('load', init);
+            window.addEventListener('load', start);
         }
-    });
+    }
+
+    // Инициализация плагина
+    if (window.appready) {
+        initPlugin();
+    } else {
+        const readyCheck = setInterval(() => {
+            if (typeof Lampa !== 'undefined' && typeof window.appready !== 'undefined') {
+                clearInterval(readyCheck);
+                initPlugin();
+            }
+        }, 100);
+    }
 })();
