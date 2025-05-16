@@ -1,4 +1,10 @@
-(function () {
+(function() {
     'use strict';
-// Перенаправление на другой URL
-window.location.href = "https://levende.github.io/lampa-plugins/lnum.js";
+    
+    // Создаём тег <script> и загружаем удалённый JS
+    var script = document.createElement('script');
+    script.src = 'https://levende.github.io/lampa-plugins/lnum.js';
+    document.head.appendChild(script);
+    
+    console.log('Плагин lnum.js загружен и выполнен!');
+})();
