@@ -5,47 +5,34 @@
     
     var server_protocol = location.protocol === "https:" ? 'https://' : 'http://';
     
-    // Крупная SVG-иконка с "70%" (размер увеличен на 30%)
-    var icon_server_redirect = '<svg width="332" height="332" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-        '<rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/>' +
-        '<text x="12" y="16" font-family="Arial" font-size="10" font-weight="bold" text-anchor="middle" fill="currentColor">70%</text>' +
+    // Крупная SVG-иконка (размер увеличен на 30%)
+    var icon_server_redirect = '<svg width="333" height="333" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M18 12L12 6M18 12L12 18M18 12H6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>' +
+        '<circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7" fill="none"/>' +
+        '<circle cx="12" cy="9" r="1.2" fill="currentColor"/>' +
+        '<circle cx="12" cy="12" r="1.2" fill="currentColor"/>' +
+        '<circle cx="12" cy="15" r="1.2" fill="currentColor"/>' +
         '</svg>';
 
     function startMe() {
         $('#REDIRECT').remove();
         
-        var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen" ' +
-                         'style="width: 38px; height: 38px; transition: all 0.2s ease;">' +
-                            icon_server_redirect +
-                         '</div>';
+        var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen" style="width: 42px; height: 42px">' + 
+                         icon_server_redirect + '</div>';
         
-        $('#app > div.head > div > div.head__actions').append(domainBUTT);
-        $('#REDIRECT').insertAfter('div[class="head__action selector open--settings"]');
-           
+        $('.head__actions').append(domainBUTT);
+        $('#REDIRECT').insertAfter('.open--settings');
+        
         if(!Lampa.Storage.get('location_server')) {
-            setTimeout(function() {
-                $('#REDIRECT').remove();
-            }, 10);
+            $('#REDIRECT').remove();
+            return;
         }
         
-        // Увеличение при фокусе (для TV)
-        $('#REDIRECT')
-            .on('hover:enter', function() {
-                $(this).css({
-                    'transform': 'scale(1.3)',
-                    'filter': 'drop-shadow(0 0 6px rgba(0, 150, 255, 0.7))'
-                });
-            })
-            .on('hover:leave', function() {
-                $(this).css({
-                    'transform': 'scale(1)',
-                    'filter': 'none'
-                });
-            })
-            .on('hover:click hover:touch', function() {
-                window.location.href = server_protocol + Lampa.Storage.get('location_server');
-            });
-     
+        // Рабочий редирект при клике
+        $('#REDIRECT').on('hover:enter hover:click hover:touch', function() {
+            window.location.href = server_protocol + Lampa.Storage.get('location_server');
+        });
+        
         // Настройки
         Lampa.SettingsApi.addComponent({
             component: 'location_redirect',
@@ -57,22 +44,17 @@
             component: 'location_redirect',
             param: {
                 name: 'location_server',
-                type: 'input', 
-                values: '',
-                placeholder: 'Например: bylampa.online',
-                default: 'my.bylampa.online'
+                type: 'input',
+                placeholder: 'bylampa.online',
+                default: ''
             },
             field: {
                 name: 'Адрес сервера',
-                description: 'Нажмите для ввода, смену сервера можно сделать кнопкой в верхнем баре'
+                description: 'Используйте кнопку вверху для перехода'
             },
             onChange: function(value) {
-                if (value === '') {
-                    $('#REDIRECT').remove();
-                } else {
-                    if (!$('#REDIRECT').length) startMe();
-                }
-            }         
+                value ? startMe() : $('#REDIRECT').remove();
+            }
         });
         
         Lampa.SettingsApi.addParam({
@@ -83,31 +65,22 @@
                 default: false
             },
             field: {
-                name: 'Постоянный редирект',
-                description: 'Чтобы отключить, зажмите клавишу ВНИЗ при загрузке' 
+                name: 'Авторедирект',
+                description: 'Зажмите ВНИЗ при загрузке для отмены'
             }
         });
 
-        Lampa.Keypad.listener.follow("keydown", function(e) {
-            if (e.code === 40 || e.code === 29461) {
-                Lampa.Storage.set('const_redirect', false);
-            } 
-        });
-
-        setTimeout(function() {
-            if (Lampa.Storage.field('const_redirect') === true) {
+        // Авторедирект
+        if(Lampa.Storage.field('const_redirect')) {
+            setTimeout(function() {
                 window.location.href = server_protocol + Lampa.Storage.get('location_server');
-            }
-        }, 300);
+            }, 300);
+        }
     }
-    
-    if (window.appready) {
-        startMe();
-    } else {
-        Lampa.Listener.follow('app', function(e) {
-            if (e.type === 'ready') {
-                startMe();
-            }
-        });
-    }
+
+    // Инициализация
+    if(window.appready) startMe();
+    else Lampa.Listener.follow('app', function(e) {
+        if(e.type == 'ready') startMe();
+    });
 })();
