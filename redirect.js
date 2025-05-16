@@ -3,261 +3,130 @@
 
     Lampa.Platform.tv();
     
-    // Список серверов
-    var servers = [
-        { 
-            id: 'server1', 
-            name: 'Сервер 1', 
-            url: 'http://185.105.117.217:12160/',
-            testUrl: 'http://185.105.117.217:12160/test'
-        },
-        { 
-            id: 'server2', 
-            name: 'Сервер 2', 
-            url: 'http://my.bylampa.online/',
-            testUrl: 'http://my.bylampa.online/test'
-        },
-        { 
-            id: 'server3', 
-            name: 'Сервер 3', 
-            url: 'http://bylampa.online/',
-            testUrl: 'http://bylampa.online/test'
-        }
-    ];
+    var server_protocol = location.protocol === "https:" ? 'https://' : 'http://';
     
-    var currentSelection = 0;
-    var timerInterval;
-    var timeLeft = 30;
-    var downKeyPressed = false;
-    var downKeyTimer;
-    var icon_server_redirect = '<svg width="256px" height="256px" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M13 21.75C13.4142 21.75 13.75 21.4142 13.75 21C13.75 20.5858 13.4142 20.25 13 20.25V21.75ZM3.17157 19.8284L3.7019 19.2981H3.7019L3.17157 19.8284ZM20.8284 4.17157L20.2981 4.7019V4.7019L20.8284 4.17157ZM21.25 13C21.25 13.4142 21.5858 13.75 22 13.75C22.4142 13.75 22.75 13.4142 22.75 13H21.25ZM10 3.75H14V2.25H10V3.75ZM2.75 13V12H1.25V13H2.75ZM2.75 12V11H1.25V12H2.75ZM13 20.25H10V21.75H13V20.25ZM21.25 11V12H22.75V11H21.25ZM1.25 13C1.25 14.8644 1.24841 16.3382 1.40313 17.489C1.56076 18.6614 1.89288 19.6104 2.64124 20.3588L3.7019 19.2981C3.27869 18.8749 3.02502 18.2952 2.88976 17.2892C2.75159 16.2615 2.75 14.9068 2.75 13H1.25ZM10 20.25C8.09318 20.25 6.73851 20.2484 5.71085 20.1102C4.70476 19.975 4.12511 19.7213 3.7019 19.2981L2.64124 20.3588C3.38961 21.1071 4.33855 21.4392 5.51098 21.5969C6.66182 21.7516 8.13558 21.75 10 21.75V20.25ZM14 3.75C15.9068 3.75 17.2615 3.75159 18.2892 3.88976C19.2952 4.02502 19.8749 4.27869 20.2981 4.7019L21.3588 3.64124C20.6104 2.89288 19.6614 2.56076 18.489 2.40313C17.3382 2.24841 15.8644 2.25 14 2.25V3.75ZM22.75 11C22.75 9.13558 22.7516 7.66182 22.5969 6.51098C22.4392 5.33855 22.1071 4.38961 21.3588 3.64124L20.2981 4.7019C20.7213 5.12511 20.975 5.70476 21.1102 6.71085C21.2484 7.73851 21.25 9.09318 21.25 11H22.75ZM10 2.25C8.13558 2.25 6.66182 2.24841 5.51098 2.40313C4.33856 2.56076 3.38961 2.89288 2.64124 3.64124L3.7019 4.7019C4.12511 4.27869 4.70476 4.02502 5.71085 3.88976C6.73851 3.75159 8.09318 3.75 10 3.75V2.25ZM2.75 11C2.75 9.09318 2.75159 7.73851 2.88976 6.71085C3.02502 5.70476 3.27869 5.12511 3.7019 4.7019L2.64124 3.64124C1.89288 4.38961 1.56076 5.33855 1.40313 6.51098C1.24841 7.66182 1.25 9.13558 1.25 11H2.75ZM2 12.75H22V11.25H2V12.75ZM21.25 12V13H22.75V12H21.25Z" fill="currentColor"></path> <path d="M13.5 7.5L18 7.5" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"></path> <path d="M6 17.5L6 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path> <path d="M6 8.5L6 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path> <path d="M9 17.5L9 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path> <path d="M9 8.5L9 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path> <path d="M15.5841 17.5H14.8341V17.5L15.5841 17.5ZM15.5841 18L15.0964 18.5698C15.3772 18.8101 15.7911 18.8101 16.0718 18.5698L15.5841 18ZM16.656 18.0698C16.9706 17.8004 17.0074 17.327 16.738 17.0123C16.4687 16.6976 15.9952 16.6609 15.6806 16.9302L16.656 18.0698ZM15.4877 16.9302C15.173 16.6609 14.6996 16.6976 14.4302 17.0123C14.1609 17.327 14.1976 17.8004 14.5123 18.0698L15.4877 16.9302ZM20.3892 16.6352C20.6296 16.9726 21.0979 17.0512 21.4352 16.8108C21.7726 16.5704 21.8512 16.1021 21.6108 15.7648L20.3892 16.6352ZM18.5048 14.25C16.5912 14.25 14.8341 15.5999 14.8341 17.5H16.3341C16.3341 16.6387 17.1923 15.75 18.5048 15.75V14.25ZM14.8341 17.5L14.8341 18L16.3341 18L16.3341 17.5L14.8341 17.5ZM16.0718 18.5698L16.656 18.0698L15.6806 16.9302L15.0964 17.4302L16.0718 18.5698ZM16.0718 17.4302L15.4877 16.9302L14.5123 18.0698L15.0964 18.5698L16.0718 17.4302ZM21.6108 15.7648C20.945 14.8304 19.782 14.25 18.5048 14.25V15.75C19.3411 15.75 20.0295 16.1304 20.3892 16.6352L21.6108 15.7648Z" fill="currentColor"></path> <path d="M18.4952 21V21.75V21ZM21.4159 18.5H22.1659H21.4159ZM21.4159 18L21.9036 17.4302C21.6228 17.1899 21.2089 17.1899 20.9282 17.4302L21.4159 18ZM20.344 17.9302C20.0294 18.1996 19.9926 18.673 20.262 18.9877C20.5313 19.3024 21.0048 19.3391 21.3194 19.0698L20.344 17.9302ZM21.5123 19.0698C21.827 19.3391 22.3004 19.3024 22.5698 18.9877C22.8391 18.673 22.8024 18.1996 22.4877 17.9302L21.5123 19.0698ZM16.6108 19.3648C16.3704 19.0274 15.9021 18.9488 15.5648 19.1892C15.2274 19.4296 15.1488 19.8979 15.3892 20.2352L16.6108 19.3648ZM18.4952 21.75C20.4088 21.75 22.1659 20.4001 22.1659 18.5H20.6659C20.6659 19.3613 19.8077 20.25 18.4952 20.25V21.75ZM22.1659 18.5V18H20.6659V18.5H22.1659ZM20.9282 17.4302L20.344 17.9302L21.3194 19.0698L21.9036 18.5698L20.9282 17.4302ZM20.9282 18.5698L21.5123 19.0698L22.4877 17.9302L21.9036 17.4302L20.9282 18.5698ZM15.3892 20.2352C16.055 21.1696 17.218 21.75 18.4952 21.75V20.25C17.6589 20.25 16.9705 19.8696 16.6108 19.3648L15.3892 20.2352Z" fill="currentColor"></path> </g></svg>';
+    // Стильная SVG-иконка для редиректа (ES5-совместимый синтаксис)
+    var icon_server_redirect = '<svg width="256" height="256" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M18 12L12 6M18 12L12 18M18 12H6" ' +
+              'stroke="currentColor" ' +
+              'stroke-width="1.8" ' +
+              'stroke-linecap="round" ' +
+              'stroke-linejoin="round"/>' +
+        '<circle cx="12" cy="12" r="3.5" ' +
+                'stroke="currentColor" ' +
+                'stroke-width="1.3" ' +
+                'fill="none"/>' +
+        '<circle cx="12" cy="9.5" r="1" fill="currentColor"/>' +
+        '<circle cx="12" cy="12.5" r="1" fill="currentColor"/>' +
+        '<circle cx="12" cy="15.5" r="1" fill="currentColor"/>' +
+    '</svg>';
 
-    // Проверка доступности сервера
-    function checkServerAvailability(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.timeout = 3000;
-        xhr.open('GET', url, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                callback(xhr.status === 200 || xhr.status === 404);
-            }
-        };
-        xhr.onerror = function() {
-            callback(false);
-        };
-        try {
-            xhr.send();
-        } catch(e) {
-            callback(false);
-        }
-    }
-
-    // Создание меню выбора серверов
-    function createServerSelectionMenu() {
-        var menuHTML = `
-            <div id="SERVER_SELECTION" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background-color: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
-                justify-content: center; align-items: center; z-index: 9999;">
-                <div style="color: white; font-size: 24px; margin-bottom: 30px;">
-                    Выберите сервер (автовыбор через <span id="SELECTION_TIMER">30</span> сек)
-                </div>
-                <div id="SERVER_STATUS" style="color: #ff9800; margin-bottom: 20px;"></div>
-        `;
-        
-        servers.forEach(function(server, index) {
-            menuHTML += `
-                <button id="${server.id}" 
-                        style="margin: 10px; padding: 15px 30px; font-size: 20px; min-width: 300px; 
-                               background-color: ${index === 0 ? '#4CAF50' : '#333'}; 
-                               color: white; border: none; border-radius: 5px; cursor: pointer;
-                               position: relative;">
-                    ${server.name} (${server.url.replace(/^https?:\/\//, '')})
-                    <span id="status_${server.id}" style="position: absolute; right: 10px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" fill="#777"/>
-                        </svg>
-                    </span>
-                </button>
-            `;
-        });
-        
-        menuHTML += `</div>`;
-        
-        $('body').append(menuHTML);
-        
-        // Проверяем доступность серверов
-        servers.forEach(function(server) {
-            checkServerAvailability(server.testUrl, function(isAvailable) {
-                var statusElement = $('#status_' + server.id + ' svg');
-                statusElement.find('circle').attr('fill', isAvailable ? '#4CAF50' : '#f44336');
-                
-                if (!isAvailable) {
-                    $('#' + server.id).css('opacity', '0.6');
-                }
-            });
-        });
-        
-        // Назначаем обработчики для кнопок
-        servers.forEach(function(server, index) {
-            $('#' + server.id).on('hover:enter hover:click', function() {
-                if (!$('#' + server.id).css('opacity') || $('#' + server.id).css('opacity') !== '0.6') {
-                    selectServer(index);
-                } else {
-                    $('#SERVER_STATUS').text('Сервер недоступен, выберите другой');
-                    setTimeout(function() {
-                        $('#SERVER_STATUS').text('');
-                    }, 2000);
-                }
-            });
-        });
-        
-        startSelectionTimer();
-        
-        $(document).on('keydown.serverSelection', function(e) {
-            if (e.keyCode === 38 || e.keyCode === 40) {
-                e.preventDefault();
-                navigateServers(e.keyCode === 38 ? -1 : 1);
-            } else if (e.keyCode === 13) {
-                e.preventDefault();
-                if (!$('#' + servers[currentSelection].id).css('opacity') || 
-                    $('#' + servers[currentSelection].id).css('opacity') !== '0.6') {
-                    selectServer(currentSelection);
-                }
-            }
-        });
-    }
-    
-    // Навигация по серверам
-    function navigateServers(direction) {
-        $('#' + servers[currentSelection].id).css('background-color', '#333');
-        
-        currentSelection += direction;
-        if (currentSelection < 0) currentSelection = servers.length - 1;
-        if (currentSelection >= servers.length) currentSelection = 0;
-        
-        $('#' + servers[currentSelection].id).css('background-color', '#4CAF50');
-    }
-    
-    // Выбор сервера
-    function selectServer(index) {
-        clearInterval(timerInterval);
-        var selectedServer = servers[index];
-        
-        // Для WebOS используем специальный метод загрузки
-        if (navigator.userAgent.match(/WebOS/i)) {
-            $('#SERVER_STATUS').text('Загрузка...');
-            
-            // Создаем iframe для обхода ограничений
-            var iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = selectedServer.url;
-            document.body.appendChild(iframe);
-            
-            // Дополнительная проверка через 3 секунды
-            setTimeout(function() {
-                window.location.href = selectedServer.url;
-            }, 3000);
-        } else {
-            window.location.href = selectedServer.url;
-        }
-        
-        localStorage.setItem('selectedServer', JSON.stringify(selectedServer));
-    }
-    
-    // Таймер автоматического выбора
-    function startSelectionTimer() {
-        timerInterval = setInterval(function() {
-            timeLeft--;
-            $('#SELECTION_TIMER').text(timeLeft);
-            
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                // Выбираем первый доступный сервер
-                for (var i = 0; i < servers.length; i++) {
-                    if (!$('#' + servers[i].id).css('opacity') || $('#' + servers[i].id).css('opacity') !== '0.6') {
-                        selectServer(i);
-                        break;
-                    }
-                }
-            }
-        }, 1000);
-    }
-    
-    // Обработчики клавиш для вызова меню
-    function handleKeyDown(e) {
-        // Кнопка Down
-        if (e.keyCode === 40 || e.code === 'ArrowDown') {
-            if (!downKeyPressed) {
-                downKeyPressed = true;
-                // Запускаем таймер удержания (2 секунды)
-                downKeyTimer = setTimeout(function() {
-                    createServerSelectionMenu();
-                }, 2000);
-            }
-        }
-    }
-
-    function handleKeyUp(e) {
-        if (e.keyCode === 40 || e.code === 'ArrowDown') {
-            downKeyPressed = false;
-            clearTimeout(downKeyTimer);
-        }
-    }
-
-    // Добавление кнопки в интерфейс
-    function addServerSwitchButton() {
+    function startMe() {
         $('#REDIRECT').remove();
         
-        var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen">' + icon_server_redirect + '</div>';
+        var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen" ' +
+                         'style="transition: all 0.25s ease; opacity: 0.9;">' +
+                            icon_server_redirect +
+                         '</div>';
+        
         $('#app > div.head > div > div.head__actions').append(domainBUTT);
         $('#REDIRECT').insertAfter('div[class="head__action selector open--settings"]');
            
-        if(!localStorage.getItem('selectedServer')) {
-            setTimeout(function(){
+        if(!Lampa.Storage.get('location_server')) {
+            setTimeout(function() {
                 $('#REDIRECT').remove();
             }, 10);
         }
         
-        $('#REDIRECT').on('hover:enter hover:click hover:touch', function() {
-            createServerSelectionMenu();
-        });
-    }
-    
-    // Инициализация
-    function startMe() {
-        // Добавляем обработчики клавиш
-        document.addEventListener('keydown', handleKeyDown);
-        document.addEventListener('keyup', handleKeyUp);
-        
-        // Добавляем кнопку в интерфейс
-        addServerSwitchButton();
-        
-        var savedServer = localStorage.getItem('selectedServer');
-        
-        if (!savedServer) {
-            createServerSelectionMenu();
-        } else {
-            try {
-                var server = JSON.parse(savedServer);
-                // Проверяем доступность сохраненного сервера
-                checkServerAvailability(server.testUrl || (server.url + 'test'), function(isAvailable) {
-                    if (isAvailable) {
-                        window.location.href = server.url;
-                    } else {
-                        createServerSelectionMenu();
-                    }
+        // Плавные hover-эффекты
+        $('#REDIRECT')
+            .on('mouseenter', function() {
+                $(this).css({
+                    'transform': 'scale(1.15)',
+                    'opacity': '1',
+                    'filter': 'drop-shadow(0 0 8px rgba(100, 149, 237, 0.8))'
                 });
-            } catch(e) {
-                createServerSelectionMenu();
+            })
+            .on('mouseleave', function() {
+                $(this).css({
+                    'transform': 'scale(1)',
+                    'opacity': '0.9',
+                    'filter': 'none'
+                });
+            })
+            .on('hover:enter hover:click hover:touch', function() {
+                var $this = $(this);
+                $this.css('transform', 'scale(0.95)');
+                setTimeout(function() {
+                    window.location.href = server_protocol + Lampa.Storage.get('location_server');
+                }, 200);
+            });
+     
+        // Настройки в интерфейсе
+        Lampa.SettingsApi.addComponent({
+            component: 'location_redirect',
+            name: 'Смена сервера',
+            icon: icon_server_redirect
+        });
+        
+        Lampa.SettingsApi.addParam({
+            component: 'location_redirect',
+            param: {
+                name: 'location_server',
+                type: 'input', 
+                values: '',
+                placeholder: 'Например: bylampa.online',
+                default: 'my.bylampa.online'
+            },
+            field: {
+                name: 'Адрес сервера',
+                description: 'Нажмите для ввода, смену сервера можно сделать кнопкой в верхнем баре'
+            },
+            onChange: function(value) {
+                if (value === '') {
+                    $('#REDIRECT').remove();
+                } else {
+                    if (!$('#REDIRECT').length) startMe();
+                }
+            }         
+        });
+        
+        Lampa.SettingsApi.addParam({
+            component: 'location_redirect',
+            param: {
+                name: 'const_redirect',
+                type: 'trigger',
+                default: false
+            },
+            field: {
+                name: 'Постоянный редирект',
+                description: 'Чтобы отключить, зажмите клавишу ВНИЗ при загрузке' 
             }
-        }
+        });
+
+        // Отключение постоянного редиректа
+        Lampa.Keypad.listener.follow("keydown", function(e) {
+            if (e.code === 40 || e.code === 29461) {
+                Lampa.Storage.set('const_redirect', false);
+            } 
+        });
+
+        // Автоматический редирект если включен
+        setTimeout(function() {
+            if (Lampa.Storage.field('const_redirect') === true) {
+                window.location.href = server_protocol + Lampa.Storage.get('location_server');
+            }
+        }, 300);
     }
     
-    // Запуск приложения
-    if(window.appready) startMe();
-    else {
+    // Запуск
+    if (window.appready) {
+        startMe();
+    } else {
         Lampa.Listener.follow('app', function(e) {
-            if(e.type == 'ready') startMe();
+            if (e.type === 'ready') {
+                startMe();
+            }
         });
     }
 })();
