@@ -3,13 +3,13 @@
 
     Lampa.Platform.tv();
     
-    // Список доступных серверов с полными URL
+    // Список серверов
     var servers = [
         { 
             id: 'server1', 
             name: 'Сервер 1', 
             url: 'http://185.105.117.217:12160/',
-            testUrl: 'http://185.105.117.217:12160/test' // URL для проверки доступности
+            testUrl: 'http://185.105.117.217:12160/test'
         },
         { 
             id: 'server2', 
@@ -28,29 +28,41 @@
     var currentSelection = 0;
     var timerInterval;
     var timeLeft = 30;
+    var downKeyPressed = false;
+    var downKeyTimer;
 
-    // Функция проверки доступности сервера
-    function checkServerAvailability(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.timeout = 3000; // Таймаут 3 секунды
-        xhr.open('GET', url, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                callback(xhr.status === 200 || xhr.status === 404); // 404 тоже считаем успехом (сервер отвечает)
+    // Обработчик нажатия клавиш
+    function handleKeyDown(e) {
+        // Кнопка Down
+        if (e.keyCode === 40 || e.code === 'ArrowDown') {
+            if (!downKeyPressed) {
+                downKeyPressed = true;
+                // Запускаем таймер удержания (2 секунды)
+                downKeyTimer = setTimeout(function() {
+                    showServerSelectionMenu();
+                }, 2000);
             }
-        };
-        xhr.onerror = function() {
-            callback(false);
-        };
-        try {
-            xhr.send();
-        } catch(e) {
-            callback(false);
         }
     }
 
-    // Создаем меню выбора сервера с проверкой доступности
-    function createServerSelectionMenu() {
+    // Обработчик отпускания клавиш
+    function handleKeyUp(e) {
+        if (e.keyCode === 40 || e.code === 'ArrowDown') {
+            downKeyPressed = false;
+            clearTimeout(downKeyTimer);
+        }
+    }
+
+    // Показать меню выбора серверов
+    function showServerSelectionMenu() {
+        // Отключаем таймер автовыбора, если он был
+        clearTimeout(downKeyTimer);
+        downKeyPressed = false;
+        
+        // Удаляем предыдущее меню, если есть
+        $('#SERVER_SELECTION').remove();
+        
+        // Создаем HTML для меню
         var menuHTML = `
             <div id="SERVER_SELECTION" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                 background-color: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
@@ -61,6 +73,7 @@
                 <div id="SERVER_STATUS" style="color: #ff9800; margin-bottom: 20px;"></div>
         `;
         
+        // Добавляем кнопки для каждого сервера
         servers.forEach(function(server, index) {
             menuHTML += `
                 <button id="${server.id}" 
@@ -108,22 +121,49 @@
             });
         });
         
+        // Запускаем таймер автоматического выбора
         startSelectionTimer();
         
+        // Обработка клавиш в меню
         $(document).on('keydown.serverSelection', function(e) {
-            if (e.keyCode === 38 || e.keyCode === 40) {
+            if (e.keyCode === 38 || e.keyCode === 40) { // Вверх/Вниз
                 e.preventDefault();
                 navigateServers(e.keyCode === 38 ? -1 : 1);
-            } else if (e.keyCode === 13) {
+            } else if (e.keyCode === 13) { // Enter
                 e.preventDefault();
                 if (!$('#' + servers[currentSelection].id).css('opacity') || 
                     $('#' + servers[currentSelection].id).css('opacity') !== '0.6') {
                     selectServer(currentSelection);
                 }
+            } else if (e.keyCode === 27) { // Escape
+                e.preventDefault();
+                $('#SERVER_SELECTION').remove();
+                $(document).off('keydown.serverSelection');
             }
         });
     }
-    
+
+    // Проверка доступности сервера
+    function checkServerAvailability(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.timeout = 3000;
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                callback(xhr.status === 200 || xhr.status === 404);
+            }
+        };
+        xhr.onerror = function() {
+            callback(false);
+        };
+        try {
+            xhr.send();
+        } catch(e) {
+            callback(false);
+        }
+    }
+
+    // Навигация по серверам
     function navigateServers(direction) {
         $('#' + servers[currentSelection].id).css('background-color', '#333');
         
@@ -133,8 +173,8 @@
         
         $('#' + servers[currentSelection].id).css('background-color', '#4CAF50');
     }
-    
-    // Модифицированная функция выбора сервера для WebOS
+
+    // Выбор сервера
     function selectServer(index) {
         clearInterval(timerInterval);
         var selectedServer = servers[index];
@@ -159,8 +199,12 @@
         
         localStorage.setItem('selectedServer', JSON.stringify(selectedServer));
     }
-    
+
+    // Таймер автоматического выбора
     function startSelectionTimer() {
+        timeLeft = 30;
+        $('#SELECTION_TIMER').text(timeLeft);
+        
         timerInterval = setInterval(function() {
             timeLeft--;
             $('#SELECTION_TIMER').text(timeLeft);
@@ -177,12 +221,17 @@
             }
         }, 1000);
     }
-    
+
+    // Основная функция инициализации
     function startMe() {
+        // Добавляем обработчики клавиш
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+        
         var savedServer = localStorage.getItem('selectedServer');
         
         if (!savedServer) {
-            createServerSelectionMenu();
+            showServerSelectionMenu();
         } else {
             try {
                 var server = JSON.parse(savedServer);
@@ -191,11 +240,11 @@
                     if (isAvailable) {
                         window.location.href = server.url;
                     } else {
-                        createServerSelectionMenu();
+                        showServerSelectionMenu();
                     }
                 });
             } catch(e) {
-                createServerSelectionMenu();
+                showServerSelectionMenu();
             }
         }
     }
