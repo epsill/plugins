@@ -1,5 +1,4 @@
 (function() {
-    'use strict';
     
     // Создаём тег <script> и загружаем удалённый JS
     var script = document.createElement('script');
