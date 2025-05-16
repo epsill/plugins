@@ -31,6 +31,7 @@
     var downKeyPressed = false;
     var downKeyTimer;
     var menuActive = false;
+    var selectedServer = null;
 
     // Проверка доступности сервера
     function checkServerAvailability(url, callback) {
@@ -168,7 +169,10 @@
     // Выбор сервера
     function selectServer(index) {
         clearInterval(timerInterval);
-        var selectedServer = servers[index];
+        selectedServer = servers[index];
+        
+        // Сохраняем выбор
+        localStorage.setItem('selectedServer', JSON.stringify(selectedServer));
         
         // Для WebOS используем специальный метод загрузки
         if (navigator.userAgent.match(/WebOS/i)) {
@@ -187,8 +191,6 @@
         } else {
             window.location.href = selectedServer.url;
         }
-        
-        localStorage.setItem('selectedServer', JSON.stringify(selectedServer));
     }
     
     // Таймер автоматического выбора
@@ -253,22 +255,26 @@
         // Добавляем кнопку в интерфейс
         addServerSwitchButton();
         
+        // Проверяем сохраненный сервер
         var savedServer = localStorage.getItem('selectedServer');
-        
-        if (!savedServer) {
-            toggleServerMenu(true);
-        } else {
+        if (savedServer) {
             try {
-                var server = JSON.parse(savedServer);
+                selectedServer = JSON.parse(savedServer);
                 // Проверяем доступность сохраненного сервера
-                checkServerAvailability(server.testUrl || (server.url + 'test'), function(isAvailable) {
+                checkServerAvailability(selectedServer.testUrl || (selectedServer.url + 'test'), function(isAvailable) {
                     if (!isAvailable) {
                         toggleServerMenu(true);
+                    } else {
+                        // Если сервер доступен, перенаправляем
+                        window.location.href = selectedServer.url;
                     }
                 });
             } catch(e) {
                 toggleServerMenu(true);
             }
+        } else {
+            // Если сервер не выбран, показываем меню
+            toggleServerMenu(true);
         }
     }
     
