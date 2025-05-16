@@ -3,13 +3,13 @@
 
     Lampa.Platform.tv();
     
-    // Список доступных серверов с полными URL
+    // Список серверов
     var servers = [
         { 
             id: 'server1', 
             name: 'Сервер 1', 
             url: 'http://185.105.117.217:12160/',
-            testUrl: 'http://185.105.117.217:12160/test' // URL для проверки доступности
+            testUrl: 'http://185.105.117.217:12160/test'
         },
         { 
             id: 'server2', 
@@ -28,15 +28,18 @@
     var currentSelection = 0;
     var timerInterval;
     var timeLeft = 30;
+    var downKeyPressed = false;
+    var downKeyTimer;
+    var menuActive = false;
 
-    // Функция проверки доступности сервера
+    // Проверка доступности сервера
     function checkServerAvailability(url, callback) {
         var xhr = new XMLHttpRequest();
-        xhr.timeout = 3000; // Таймаут 3 секунды
+        xhr.timeout = 3000;
         xhr.open('GET', url, true);
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
-                callback(xhr.status === 200 || xhr.status === 404); // 404 тоже считаем успехом (сервер отвечает)
+                callback(xhr.status === 200 || xhr.status === 404);
             }
         };
         xhr.onerror = function() {
@@ -49,8 +52,31 @@
         }
     }
 
-    // Создаем меню выбора сервера с проверкой доступности
+    // Показать/скрыть меню выбора серверов
+    function toggleServerMenu(show) {
+        if (show === undefined) {
+            show = !menuActive;
+        }
+        
+        if (show) {
+            createServerSelectionMenu();
+            menuActive = true;
+        } else {
+            $('#SERVER_SELECTION').remove();
+            $(document).off('keydown.serverSelection');
+            menuActive = false;
+        }
+    }
+
+    // Создание меню выбора
     function createServerSelectionMenu() {
+        // Удаляем старое меню если есть
+        $('#SERVER_SELECTION').remove();
+        
+        // Сбрасываем таймер
+        clearInterval(timerInterval);
+        timeLeft = 30;
+        
         var menuHTML = `
             <div id="SERVER_SELECTION" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                 background-color: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
@@ -110,20 +136,25 @@
         
         startSelectionTimer();
         
+        // Обработка клавиш в меню
         $(document).on('keydown.serverSelection', function(e) {
-            if (e.keyCode === 38 || e.keyCode === 40) {
+            if (e.keyCode === 38 || e.keyCode === 40) { // Вверх/Вниз
                 e.preventDefault();
                 navigateServers(e.keyCode === 38 ? -1 : 1);
-            } else if (e.keyCode === 13) {
+            } else if (e.keyCode === 13) { // Enter
                 e.preventDefault();
                 if (!$('#' + servers[currentSelection].id).css('opacity') || 
                     $('#' + servers[currentSelection].id).css('opacity') !== '0.6') {
                     selectServer(currentSelection);
                 }
+            } else if (e.keyCode === 27) { // Escape
+                e.preventDefault();
+                toggleServerMenu(false);
             }
         });
     }
     
+    // Навигация по серверам
     function navigateServers(direction) {
         $('#' + servers[currentSelection].id).css('background-color', '#333');
         
@@ -134,7 +165,7 @@
         $('#' + servers[currentSelection].id).css('background-color', '#4CAF50');
     }
     
-    // Модифицированная функция выбора сервера для WebOS
+    // Выбор сервера
     function selectServer(index) {
         clearInterval(timerInterval);
         var selectedServer = servers[index];
@@ -160,6 +191,7 @@
         localStorage.setItem('selectedServer', JSON.stringify(selectedServer));
     }
     
+    // Таймер автоматического выбора
     function startSelectionTimer() {
         timerInterval = setInterval(function() {
             timeLeft--;
@@ -178,29 +210,69 @@
         }, 1000);
     }
     
+    // Обработчики клавиш для вызова меню
+    function handleKeyDown(e) {
+        // Кнопка Down
+        if (e.keyCode === 40 || e.code === 'ArrowDown') {
+            if (!downKeyPressed) {
+                downKeyPressed = true;
+                // Запускаем таймер удержания (2 секунды)
+                downKeyTimer = setTimeout(function() {
+                    toggleServerMenu(true);
+                }, 2000);
+            }
+        }
+    }
+
+    function handleKeyUp(e) {
+        if (e.keyCode === 40 || e.code === 'ArrowDown') {
+            downKeyPressed = false;
+            clearTimeout(downKeyTimer);
+        }
+    }
+
+    // Добавление кнопки в интерфейс
+    function addServerSwitchButton() {
+        $('#REDIRECT').remove();
+        
+        var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen">⚙️</div>';
+        $('#app > div.head > div > div.head__actions').append(domainBUTT);
+        $('#REDIRECT').insertAfter('div[class="head__action selector open--settings"]');
+           
+        $('#REDIRECT').on('hover:enter hover:click hover:touch', function() {
+            toggleServerMenu(true);
+        });
+    }
+    
+    // Инициализация
     function startMe() {
+        // Добавляем обработчики клавиш
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+        
+        // Добавляем кнопку в интерфейс
+        addServerSwitchButton();
+        
         var savedServer = localStorage.getItem('selectedServer');
         
         if (!savedServer) {
-            createServerSelectionMenu();
+            toggleServerMenu(true);
         } else {
             try {
                 var server = JSON.parse(savedServer);
                 // Проверяем доступность сохраненного сервера
                 checkServerAvailability(server.testUrl || (server.url + 'test'), function(isAvailable) {
-                    if (isAvailable) {
-                        window.location.href = server.url;
-                    } else {
-                        createServerSelectionMenu();
+                    if (!isAvailable) {
+                        toggleServerMenu(true);
                     }
                 });
             } catch(e) {
-                createServerSelectionMenu();
+                toggleServerMenu(true);
             }
         }
     }
     
-    // Инициализация
+    // Запуск приложения
     if(window.appready) startMe();
     else {
         Lampa.Listener.follow('app', function(e) {
