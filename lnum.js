@@ -1,3 +1,3 @@
 (function() {
-  $.getScript('https://lampaplugins.github.io/store/store.js');
+  $.getScript('https://levende.github.io/lampa-plugins/lnum.js');
 })();
