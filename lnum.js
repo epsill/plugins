@@ -1,3 +1,5 @@
 (function() {
-  $.getScript('https://levende.github.io/lampa-plugins/lnum.js');
+  var script = document.createElement('script');
+  script.src = 'https://lampaplugins.github.io/store/store.js';
+  document.head.appendChild(script);
 })();
