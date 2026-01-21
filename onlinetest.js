@@ -1,18 +1,19 @@
-// plugin_filmix.js
-// Плагин для просмотра фильмов и сериалов через Filmix и другие источники
+// free_movies_plugin.js
+// Плагин для просмотра фильмов без API ключей
 
 (function() {
-    // Проверяем, не загружен ли уже плагин
-    if(window.filmix_plugin) return;
-    window.filmix_plugin = true;
+    if(window.free_movies_plugin) return;
+    window.free_movies_plugin = true;
     
     const manifest = {
-        name: 'Filmix Online',
-        version: '1.0.0',
-        description: 'Плагин для просмотра фильмов и сериалов из бесплатных источников'
+        name: 'Free Movies Online',
+        version: '2.0.0',
+        description: 'Просмотр фильмов и сериалов через бесплатные источники'
     };
+    
+    console.log(`Загрузка плагина: ${manifest.name} v${manifest.version}`);
 
-    // Основной компонент плагина
+    // Основной компонент
     const component = {
         template: {
             url: '',
@@ -26,221 +27,326 @@
             
             self.render = activity.render();
             self.params = params || {};
-            self.movie = params.movie || {};
-            self.search = params.search || '';
-            self.page = params.page || 1;
+            self.searchQuery = params.search || '';
             self.results = [];
             self.loading = false;
-            self.selected = null;
+            self.selectedItem = null;
             self.sources = [];
+            self.currentPage = 1;
             
             // Инициализация
             self.init = function() {
-                console.log('Filmix Online plugin initialized');
+                console.log('Free Movies plugin initialized');
                 
-                // Добавляем шаблоны
-                addTemplates();
+                // Создаем интерфейс
+                self.createUI();
                 
-                // Загружаем результаты
-                self.loadResults();
+                // Запускаем поиск если есть запрос
+                if(self.searchQuery) {
+                    self.performSearch();
+                }
                 
-                // Устанавливаем фокус
+                // Фокус
                 setTimeout(() => {
-                    if(self.render.find('.card').length) {
-                        Lampa.Controller.add('content', self.render);
-                        Lampa.Controller.collection(self.render.find('.card'));
-                        self.render.find('.card').first().trigger('hover:focus');
-                    }
-                }, 100);
+                    Lampa.Controller.add('content', self.render);
+                    self.render.find('.search-input').trigger('focus');
+                }, 200);
             };
             
-            // Поиск контента
-            self.loadResults = function() {
-                self.loading = true;
-                updateView();
-                
-                // Ищем фильмы по разным источникам
-                searchFilms(self.search, self.page).then(results => {
-                    self.results = results;
-                    self.loading = false;
-                    updateView();
-                }).catch(error => {
-                    console.error('Search error:', error);
-                    self.loading = false;
-                    updateView();
-                });
-            };
-            
-            // Выбор элемента
-            self.selectItem = function(item) {
-                self.selected = item;
-                self.loadSources(item);
-            };
-            
-            // Загрузка источников для просмотра
-            self.loadSources = function(item) {
-                self.loading = true;
-                updateView();
-                
-                getFilmSources(item).then(sources => {
-                    self.sources = sources;
-                    self.loading = false;
-                    updateView();
-                    
-                    // Автовыбор первого источника
-                    if(sources.length > 0) {
-                        setTimeout(() => {
-                            self.playSource(sources[0]);
-                        }, 100);
-                    }
-                });
-            };
-            
-            // Воспроизведение источника
-            self.playSource = function(source) {
-                console.log('Playing source:', source);
-                
-                // Создаем плеер
-                Lampa.Player.play({
-                    title: self.selected?.title || self.search,
-                    files: [{
-                        title: source.title,
-                        url: source.url,
-                        quality: source.quality,
-                        headers: source.headers || {},
-                        format: source.format || 'mp4'
-                    }],
-                    poster: self.selected?.poster || '',
-                    kinopoisk: self.selected?.kinopoisk_id || '',
-                    imdb: self.selected?.imdb_id || ''
-                });
-            };
-            
-            // Обновление отображения
-            function updateView() {
-                let html = '';
-                
-                if(self.loading) {
-                    html = '<div class="content-loading"></div>';
-                }
-                else if(self.selected) {
-                    // Показываем источники
-                    html = '<div class="card card--height">';
-                    html += '<div class="card__title">' + (self.selected.title || self.selected.name) + '</div>';
-                    
-                    if(self.selected.poster) {
-                        html += '<div class="card__poster"><img src="' + self.selected.poster + '"></div>';
-                    }
-                    
-                    html += '<div class="card__subtitle">Выберите источник:</div>';
-                    
-                    self.sources.forEach((source, index) => {
-                        html += '<div class="selector card__source" data-index="' + index + '">';
-                        html += '<div class="card__source-title">' + source.title + '</div>';
-                        html += '<div class="card__source-quality">' + source.quality + '</div>';
-                        html += '</div>';
-                    });
-                    
-                    html += '</div>';
-                }
-                else {
-                    // Показываем результаты поиска
-                    html = '<div class="card card--height">';
-                    html += '<div class="card__title">Результаты поиска: ' + self.search + '</div>';
-                    
-                    if(self.results.length === 0) {
-                        html += '<div class="card__empty">Ничего не найдено</div>';
-                    }
-                    else {
-                        self.results.forEach((item, index) => {
-                            html += '<div class="selector card__item" data-index="' + index + '">';
-                            html += '<div class="card__item-poster"><img src="' + (item.poster || '') + '"></div>';
-                            html += '<div class="card__item-info">';
-                            html += '<div class="card__item-title">' + (item.title || item.name) + '</div>';
-                            html += '<div class="card__item-year">' + (item.year || '') + '</div>';
-                            html += '<div class="card__item-description">' + (item.description || '').substring(0, 100) + '...</div>';
-                            html += '</div>';
-                            html += '</div>';
-                        });
-                    }
-                    
-                    html += '</div>';
-                }
+            // Создание интерфейса
+            self.createUI = function() {
+                let html = `
+                    <div class="filmix-container">
+                        <div class="filmix-header">
+                            <div class="filmix-title">${manifest.name}</div>
+                            <div class="filmix-search">
+                                <input type="text" class="search-input selector" 
+                                       value="${self.searchQuery || ''}" 
+                                       placeholder="Введите название фильма или сериала...">
+                                <button class="search-btn selector">Поиск</button>
+                            </div>
+                        </div>
+                        
+                        <div class="filmix-content">
+                            <div class="results-container"></div>
+                            <div class="loading-container hide">
+                                <div class="loading-spinner"></div>
+                                <div class="loading-text">Поиск...</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
                 
                 self.render.html(html);
                 
-                // Добавляем обработчики событий
-                self.render.find('.card__item, .card__source').on('hover:enter', function() {
-                    let index = $(this).data('index');
-                    
-                    if(self.selected) {
-                        // Выбор источника
-                        self.playSource(self.sources[index]);
-                    }
-                    else {
-                        // Выбор фильма
-                        self.selectItem(self.results[index]);
+                // Обработчики событий
+                self.render.find('.search-btn').on('hover:enter', function() {
+                    const query = self.render.find('.search-input').val().trim();
+                    if(query) {
+                        self.searchQuery = query;
+                        self.performSearch();
                     }
                 });
-            }
+                
+                self.render.find('.search-input').on('keypress', function(e) {
+                    if(e.keyCode === 13) { // Enter
+                        const query = $(this).val().trim();
+                        if(query) {
+                            self.searchQuery = query;
+                            self.performSearch();
+                        }
+                    }
+                });
+            };
+            
+            // Поиск фильмов
+            self.performSearch = function() {
+                self.loading = true;
+                self.results = [];
+                self.selectedItem = null;
+                self.updateUI();
+                
+                // Используем несколько методов поиска
+                Promise.any([
+                    searchViaVidsrc(self.searchQuery),
+                    searchVia2Embed(self.searchQuery),
+                    searchViaFilmix(self.searchQuery)
+                ]).then(results => {
+                    self.results = results || [];
+                    self.loading = false;
+                    self.updateUI();
+                }).catch(error => {
+                    console.error('Search failed:', error);
+                    self.loading = false;
+                    self.results = [{
+                        id: 'manual',
+                        title: self.searchQuery,
+                        year: new Date().getFullYear(),
+                        type: 'movie'
+                    }];
+                    self.updateUI();
+                });
+            };
+            
+            // Обновление интерфейса
+            self.updateUI = function() {
+                const resultsContainer = self.render.find('.results-container');
+                const loadingContainer = self.render.find('.loading-container');
+                
+                if(self.loading) {
+                    resultsContainer.hide();
+                    loadingContainer.removeClass('hide');
+                    return;
+                }
+                
+                loadingContainer.addClass('hide');
+                resultsContainer.show();
+                
+                let html = '';
+                
+                if(self.selectedItem) {
+                    // Показываем источники для выбранного фильма
+                    html = self.createSourcesUI();
+                } else if(self.results.length > 0) {
+                    // Показываем результаты поиска
+                    html = '<div class="results-grid">';
+                    
+                    self.results.forEach((item, index) => {
+                        html += `
+                            <div class="movie-card selector" data-index="${index}">
+                                <div class="movie-poster">
+                                    ${item.poster ? `<img src="${item.poster}" onerror="this.style.display='none'">` : 
+                                    '<div class="no-poster">🎬</div>'}
+                                </div>
+                                <div class="movie-info">
+                                    <div class="movie-title">${item.title || 'Без названия'}</div>
+                                    ${item.year ? `<div class="movie-year">${item.year}</div>` : ''}
+                                    ${item.description ? `<div class="movie-desc">${item.description.substring(0, 100)}...</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                } else {
+                    html = '<div class="no-results">Ничего не найдено. Попробуйте другой запрос.</div>';
+                }
+                
+                resultsContainer.html(html);
+                
+                // Обработчики для карточек
+                self.render.find('.movie-card').on('hover:enter', function() {
+                    const index = $(this).data('index');
+                    self.selectMovie(self.results[index]);
+                });
+                
+                // Обработчики для источников
+                self.render.find('.source-item').on('hover:enter', function() {
+                    const index = $(this).data('index');
+                    self.playMovie(self.sources[index]);
+                });
+                
+                // Фокус на первом элементе
+                setTimeout(() => {
+                    const firstItem = self.render.find('.selector').first();
+                    if(firstItem.length) {
+                        firstItem.trigger('focus');
+                        Lampa.Controller.collection(self.render.find('.selector'));
+                    }
+                }, 50);
+            };
+            
+            // Создание интерфейса источников
+            self.createSourcesUI = function() {
+                let html = `
+                    <div class="movie-details">
+                        <button class="back-btn selector">← Назад</button>
+                        <div class="selected-movie">
+                            <div class="movie-title-large">${self.selectedItem.title}</div>
+                            ${self.selectedItem.year ? `<div class="movie-year">${self.selectedItem.year}</div>` : ''}
+                        </div>
+                        
+                        <div class="sources-list">
+                            <div class="sources-title">Выберите источник:</div>
+                `;
+                
+                if(self.sources.length === 0) {
+                    html += '<div class="no-sources">Загрузка источников...</div>';
+                    
+                    // Автоматически загружаем источники
+                    self.loadSources();
+                } else {
+                    self.sources.forEach((source, index) => {
+                        html += `
+                            <div class="source-item selector" data-index="${index}">
+                                <div class="source-name">${source.name}</div>
+                                <div class="source-quality">${source.quality}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += '</div></div>';
+                return html;
+            };
+            
+            // Выбор фильма
+            self.selectMovie = function(movie) {
+                self.selectedItem = movie;
+                self.sources = [];
+                self.updateUI();
+            };
+            
+            // Загрузка источников
+            self.loadSources = function() {
+                getMovieSources(self.selectedItem).then(sources => {
+                    self.sources = sources;
+                    self.updateUI();
+                });
+            };
+            
+            // Воспроизведение
+            self.playMovie = function(source) {
+                console.log('Playing from:', source.name);
+                
+                Lampa.Player.play({
+                    title: self.selectedItem.title,
+                    files: [{
+                        title: `${source.name} (${source.quality})`,
+                        url: source.url,
+                        quality: source.quality,
+                        headers: source.headers || {},
+                        format: source.type || 'iframe'
+                    }],
+                    poster: self.selectedItem.poster || ''
+                });
+            };
+            
+            // Обработчик кнопки "Назад"
+            self.render.on('click', '.back-btn', function() {
+                self.selectedItem = null;
+                self.sources = [];
+                self.updateUI();
+            });
             
             self.init();
             return self;
         }
     };
     
-    // Функции для работы с источниками
+    // ========== ПОИСК БЕЗ API КЛЮЧЕЙ ==========
     
-    // Поиск фильмов по разным источникам
-    async function searchFilms(query, page = 1) {
-        const results = [];
-        
+    // Поиск через VidSrc
+    async function searchViaVidsrc(query) {
         try {
-            // Пробуем несколько источников
-            const sources = [
-                searchFilmix(query, page),
-                searchVideocdn(query, page),
-                searchKodik(query, page)
-            ];
+            // VidSrc использует TMDB ID, но мы можем получить его через поиск
+            const searchUrl = `https://vidsrc.me/videos/${encodeURIComponent(query)}`;
             
-            const allResults = await Promise.allSettled(sources);
-            
-            allResults.forEach(result => {
-                if(result.status === 'fulfilled' && result.value) {
-                    results.push(...result.value);
+            const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(searchUrl)}`, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0',
+                    'Accept': 'text/html'
                 }
             });
             
-            // Убираем дубликаты
-            const uniqueResults = [];
-            const seenIds = new Set();
+            const html = await response.text();
+            const results = [];
             
-            results.forEach(item => {
-                const id = item.id || (item.title + item.year);
-                if(!seenIds.has(id)) {
-                    seenIds.add(id);
-                    uniqueResults.push(item);
-                }
-            });
+            // Парсим HTML (упрощенно)
+            const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+            if(titleMatch && !html.includes('404')) {
+                results.push({
+                    id: 'vidsrc_' + encodeURIComponent(query),
+                    title: query,
+                    source: 'vidsrc'
+                });
+            }
             
-            return uniqueResults.slice(0, 50); // Ограничиваем количество
-        }
-        catch(error) {
-            console.error('Search films error:', error);
+            return results;
+        } catch(error) {
+            console.error('VidSrc search error:', error);
             return [];
         }
     }
     
-    // Поиск на Filmix
-    async function searchFilmix(query, page) {
+    // Поиск через 2Embed
+    async function searchVia2Embed(query) {
         try {
-            // Используем прокси для обхода CORS
-            const url = `https://corsproxy.io/?${encodeURIComponent(`https://filmix.ac/find/${query}?page=${page}`)}`;
+            // 2Embed тоже использует TMDB
+            const searchUrl = `https://www.2embed.to/embed/tmdb/search?query=${encodeURIComponent(query)}`;
             
-            const response = await fetch(url, {
+            const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(searchUrl)}`);
+            const html = await response.text();
+            
+            // Извлекаем данные из страницы
+            const results = [];
+            const regex = /data-id="(\d+)"[^>]*>([^<]+)</g;
+            let match;
+            
+            while((match = regex.exec(html)) !== null) {
+                results.push({
+                    id: match[1],
+                    title: match[2].trim(),
+                    source: '2embed'
+                });
+            }
+            
+            return results.slice(0, 10);
+        } catch(error) {
+            console.error('2Embed search error:', error);
+            return [];
+        }
+    }
+    
+    // Поиск через Filmix (парсинг)
+    async function searchViaFilmix(query) {
+        try {
+            const searchUrl = `https://filmix.ac/search/${encodeURIComponent(query)}`;
+            
+            const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(searchUrl)}`, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+                    'User-Agent': 'Mozilla/5.0',
+                    'Referer': 'https://filmix.ac/'
                 }
             });
             
@@ -248,286 +354,188 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            const items = [];
-            const filmElements = doc.querySelectorAll('.short-story');
+            const results = [];
+            const items = doc.querySelectorAll('.short-story, .search-item');
             
-            filmElements.forEach(element => {
-                const titleElement = element.querySelector('.short-title');
-                const posterElement = element.querySelector('.short-poster img');
-                const linkElement = element.querySelector('.short-title a');
+            items.forEach(item => {
+                const titleEl = item.querySelector('.short-title, .search-title');
+                const posterEl = item.querySelector('img');
+                const linkEl = item.querySelector('a');
                 
-                if(titleElement && linkElement) {
-                    const title = titleElement.textContent.trim();
-                    const href = linkElement.getAttribute('href');
-                    const poster = posterElement ? posterElement.getAttribute('src') : '';
+                if(titleEl && linkEl) {
+                    const title = titleEl.textContent.trim();
+                    const href = linkEl.getAttribute('href');
+                    const poster = posterEl ? posterEl.getAttribute('src') : null;
                     
-                    // Извлекаем ID из ссылки
-                    const idMatch = href.match(/\/film\/(\d+)-/);
-                    const id = idMatch ? idMatch[1] : href;
-                    
-                    // Пытаемся извлечь год из заголовка
+                    // Извлекаем год из заголовка
                     const yearMatch = title.match(/\((\d{4})\)/);
                     const year = yearMatch ? yearMatch[1] : '';
                     
-                    items.push({
-                        id: id,
+                    results.push({
+                        id: href,
                         title: title.replace(/\(\d{4}\)/, '').trim(),
                         year: year,
-                        poster: poster.startsWith('//') ? 'https:' + poster : poster,
-                        description: '',
+                        poster: poster ? (poster.startsWith('//') ? 'https:' + poster : poster) : null,
                         source: 'filmix',
                         url: 'https://filmix.ac' + href
                     });
                 }
             });
             
-            return items;
-        }
-        catch(error) {
+            return results;
+        } catch(error) {
             console.error('Filmix search error:', error);
             return [];
         }
     }
     
-    // Поиск на VideoCDN
-    async function searchVideocdn(query, page) {
-        try {
-            const url = `https://corsproxy.io/?${encodeURIComponent(`https://videocdn.tv/api/short?api_token=some_token&query=${query}&page=${page}`)}`;
-            
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if(data.data && Array.isArray(data.data)) {
-                return data.data.map(item => ({
-                    id: item.id,
-                    title: item.ru_title || item.en_title || item.original_title,
-                    year: item.year,
-                    poster: item.poster,
-                    description: item.content,
-                    kinopoisk_id: item.kinopoisk_id,
-                    imdb_id: item.imdb_id,
-                    source: 'videocdn'
-                }));
-            }
-            
-            return [];
-        }
-        catch(error) {
-            console.error('VideoCDN search error:', error);
-            return [];
-        }
-    }
-    
-    // Поиск на Kodik
-    async function searchKodik(query, page) {
-        try {
-            const url = `https://corsproxy.io/?${encodeURIComponent(`https://kodikapi.com/search?token=demo&title=${query}&page=${page}`)}`;
-            
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if(data.results && Array.isArray(data.results)) {
-                return data.results.map(item => ({
-                    id: item.id,
-                    title: item.title,
-                    year: item.year,
-                    poster: item.material_data?.poster_url || '',
-                    description: item.material_data?.description || '',
-                    kinopoisk_id: item.material_data?.kinopoisk_id,
-                    imdb_id: item.material_data?.imdb_id,
-                    source: 'kodik'
-                }));
-            }
-            
-            return [];
-        }
-        catch(error) {
-            console.error('Kodik search error:', error);
-            return [];
-        }
-    }
-    
     // Получение источников для фильма
-    async function getFilmSources(item) {
+    async function getMovieSources(movie) {
         const sources = [];
         
+        // Пробуем разные бесплатные источники
+        const sourcePromises = [
+            getVidsrcSource(movie),
+            get2EmbedSource(movie),
+            getFilmixSource(movie),
+            getSuperembedSource(movie)
+        ];
+        
         try {
-            // В зависимости от источника используем разные методы
-            switch(item.source) {
-                case 'filmix':
-                    const filmixSources = await getFilmixSources(item);
-                    sources.push(...filmixSources);
-                    break;
-                    
-                case 'videocdn':
-                    const videocdnSources = await getVideoCDNSources(item);
-                    sources.push(...videocdnSources);
-                    break;
-                    
-                case 'kodik':
-                    const kodikSources = await getKodikSources(item);
-                    sources.push(...kodikSources);
-                    break;
-            }
+            const allSources = await Promise.allSettled(sourcePromises);
             
-            // Если не нашли источников, пробуем альтернативные методы
-            if(sources.length === 0) {
-                const altSources = await getAlternativeSources(item);
-                sources.push(...altSources);
-            }
-            
-            return sources;
-        }
-        catch(error) {
-            console.error('Get sources error:', error);
-            return [];
-        }
-    }
-    
-    // Источники с Filmix
-    async function getFilmixSources(item) {
-        try {
-            const url = `https://corsproxy.io/?${encodeURIComponent(item.url || `https://filmix.ac/film/${item.id}`)}`;
-            
-            const response = await fetch(url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Referer': 'https://filmix.ac/'
+            allSources.forEach(result => {
+                if(result.status === 'fulfilled' && result.value) {
+                    sources.push(...result.value);
                 }
             });
             
-            const html = await response.text();
-            
-            // Парсим страницу для получения ссылок на видео
-            // Это упрощенный парсинг, реальная реализация требует более сложного парсинга
-            const sources = [];
-            
-            // Ищем iframe с видео
-            const iframeMatch = html.match(/<iframe[^>]+src="([^"]+)"/);
-            if(iframeMatch) {
-                const iframeUrl = iframeMatch[1];
-                
-                // Добавляем разные качества (в реальности нужно парсить доступные качества)
-                sources.push({
-                    title: 'Filmix (1080p)',
-                    quality: 'FHD',
-                    url: iframeUrl,
-                    headers: {
-                        'Referer': 'https://filmix.ac/',
-                        'Origin': 'https://filmix.ac'
-                    },
-                    format: 'iframe'
-                });
-            }
-            
-            // Ищем прямые ссылки на видео
-            const videoMatches = html.match(/https?:\/\/[^"']+\.(mp4|m3u8|mkv)[^"']*/gi);
-            if(videoMatches) {
-                videoMatches.forEach((videoUrl, index) => {
-                    sources.push({
-                        title: `Прямая ссылка ${index + 1}`,
-                        quality: videoUrl.includes('1080') ? 'FHD' : videoUrl.includes('720') ? 'HD' : 'SD',
-                        url: videoUrl,
-                        headers: {
-                            'Referer': 'https://filmix.ac/'
-                        },
-                        format: videoUrl.includes('.m3u8') ? 'hls' : 'mp4'
-                    });
-                });
+            // Если ничего не нашли, создаем стандартные источники
+            if(sources.length === 0) {
+                sources.push(...createFallbackSources(movie));
             }
             
             return sources;
-        }
-        catch(error) {
-            console.error('Filmix sources error:', error);
-            return [];
-        }
-    }
-    
-    // Источники с VideoCDN
-    async function getVideoCDNSources(item) {
-        try {
-            // Используем API VideoCDN
-            const url = `https://corsproxy.io/?${encodeURIComponent(`https://videocdn.tv/api/movie?api_token=demo&kinopoisk_id=${item.kinopoisk_id}`)}`;
-            
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if(data.data && data.data.iframe_src) {
-                return [{
-                    title: 'VideoCDN',
-                    quality: 'HD',
-                    url: data.data.iframe_src,
-                    headers: {
-                        'Referer': 'https://videocdn.tv/'
-                    },
-                    format: 'iframe'
-                }];
-            }
-            
-            return [];
-        }
-        catch(error) {
-            console.error('VideoCDN sources error:', error);
-            return [];
+        } catch(error) {
+            console.error('Error getting sources:', error);
+            return createFallbackSources(movie);
         }
     }
     
-    // Альтернативные источники через внешние сервисы
-    async function getAlternativeSources(item) {
-        const sources = [];
-        
+    // Источник через VidSrc
+    async function getVidsrcSource(movie) {
         try {
-            // Пробуем получить через vidsrc
-            const vidsrcUrl = `https://vidsrc.me/embed/${item.imdb_id || ''}`;
-            if(item.imdb_id) {
-                sources.push({
-                    title: 'VidSrc',
-                    quality: 'HD',
-                    url: vidsrcUrl,
-                    format: 'iframe'
-                });
-            }
+            // VidSrc поддерживает TMDB ID
+            // Если у нас нет ID, используем заглушку
+            const vidsrcId = movie.id && movie.id.startsWith('tmdb_') ? 
+                movie.id.replace('tmdb_', '') : 'latest';
             
-            // Пробуем через 2embed
-            const twoembedUrl = `https://www.2embed.to/embed/tmdb/movie/${item.id}`;
-            sources.push({
-                title: '2Embed',
+            return [{
+                name: 'VidSrc',
                 quality: 'HD',
-                url: twoembedUrl,
-                format: 'iframe'
-            });
-            
-            return sources;
-        }
-        catch(error) {
-            console.error('Alternative sources error:', error);
+                url: `https://vidsrc.me/embed/${vidsrcId}`,
+                type: 'iframe'
+            }];
+        } catch(error) {
             return [];
         }
     }
     
-    // Добавление шаблонов
-    function addTemplates() {
-        Lampa.Template.add('filmix_card', `
-            <div class="card card--height selector">
-                <div class="card__title">{title}</div>
-                <div class="card__poster">
-                    <img src="{poster}" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\"/>'">
-                </div>
-                <div class="card__info">
-                    <div class="card__year">{year}</div>
-                    <div class="card__description">{description}</div>
-                </div>
-            </div>
-        `);
-        
-        Lampa.Template.add('filmix_source', `
-            <div class="source-item selector">
-                <div class="source-item__title">{title}</div>
-                <div class="source-item__quality">{quality}</div>
-            </div>
-        `);
+    // Источник через 2Embed
+    async function get2EmbedSource(movie) {
+        try {
+            return [{
+                name: '2Embed',
+                quality: 'HD',
+                url: `https://www.2embed.to/embed/tmdb/movie/${movie.id || 'latest'}`,
+                type: 'iframe'
+            }];
+        } catch(error) {
+            return [];
+        }
     }
     
-    // Добавление кнопки в интерфейс
-    function addButton() {
+    // Источник через SuperEmbed
+    async function getSuperembedSource(movie) {
+        try {
+            return [{
+                name: 'SuperEmbed',
+                quality: 'HD',
+                url: `https://multiembed.mov/directstream.php?video_id=${movie.id || 'latest'}&tmdb=1`,
+                type: 'iframe'
+            }];
+        } catch(error) {
+            return [];
+        }
+    }
+    
+    // Запасные источники
+    function createFallbackSources(movie) {
+        const query = encodeURIComponent(movie.title);
+        
+        return [
+            {
+                name: 'Поиск в Google',
+                quality: 'Разное',
+                url: `https://www.google.com/search?q=${query}+смотреть+онлайн+бесплатно`,
+                type: 'browser'
+            },
+            {
+                name: 'YouTube',
+                quality: 'HD',
+                url: `https://www.youtube.com/results?search_query=${query}+фильм`,
+                type: 'browser'
+            }
+        ];
+    }
+    
+    // ========== СТИЛИ ==========
+    function addStyles() {
+        const css = `
+            <style>
+                .filmix-container {
+                    padding: 20px;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                }
+                
+                .filmix-header {
+                    margin-bottom: 30px;
+                }
+                
+                .filmix-title {
+                    font-size: 2em;
+                    margin-bottom: 15px;
+                    color: #ffd700;
+                }
+                
+                .filmix-search {
+                    display: flex;
+                    gap: 10px;
+                }
+                
+                .search-input {
+                    flex: 1;
+                    padding: 10px 15px;
+                    background: rgba(255,255,255,0.1);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 5px;
+                    color: white;
+                    font-size: 1em;
+                }
+                
+                .search-btn {
+                    padding: 10px 20px;
+                    background: #ffd700;
+                    color: #000;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-weight: bold;
+                }
+                
+                .search-btn.focus {
+                    background: #fffacd;
+                }
+                
+                .results-grid {
