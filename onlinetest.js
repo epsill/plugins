@@ -1,20 +1,157 @@
-// free_movies_plugin.js
-// Плагин для просмотра фильмов без API ключей
+// online_movies_plugin.js
+// Рабочий плагин для онлайн просмотра фильмов
 
 (function() {
-    if(window.free_movies_plugin) return;
-    window.free_movies_plugin = true;
+    if (window.online_movies_plugin) return;
+    window.online_movies_plugin = true;
     
-    const manifest = {
-        name: 'Free Movies Online',
-        version: '2.0.0',
-        description: 'Просмотр фильмов и сериалов через бесплатные источники'
-    };
+    console.log('Online Movies Plugin loading...');
     
-    console.log(`Загрузка плагина: ${manifest.name} v${manifest.version}`);
-
-    // Основной компонент
-    const component = {
+    // Минимальный рабочий плагин
+    function initPlugin() {
+        // Ждем когда Lampa полностью загрузится
+        Lampa.Listener.follow('app', function(e) {
+            if (e.type == 'ready') {
+                addOnlineButton();
+            }
+        });
+        
+        // Также добавляем кнопку при открытии карточки фильма
+        Lampa.Listener.follow('full', function(e) {
+            if (e.type == 'complite') {
+                setTimeout(function() {
+                    addButtonToCard(e);
+                }, 100);
+            }
+        });
+    }
+    
+    // Добавляем кнопку в карточку фильма
+    function addButtonToCard(e) {
+        try {
+            var movie = e.data.movie;
+            var render = e.object.activity.render();
+            var playSection = render.find('.button--play');
+            
+            if (playSection.length && !playSection.find('.online-movies-btn').length) {
+                var button = $('<div class="selector online-movies-btn" style="margin: 0 10px; padding: 8px 15px; background: rgba(255,215,0,0.2); border-radius: 5px; display: flex; align-items: center;">' +
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">' +
+                    '<path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path>' +
+                    '</svg>' +
+                    '<span>Смотреть онлайн</span>' +
+                    '</div>');
+                
+                button.on('hover:enter', function() {
+                    openOnlineSources(movie);
+                });
+                
+                playSection.before(button);
+            }
+        } catch (err) {
+            console.error('Error adding button:', err);
+        }
+    }
+    
+    // Открываем окно с источниками
+    function openOnlineSources(movie) {
+        var title = movie.title || movie.original_title || movie.name;
+        var year = movie.year || '';
+        var searchQuery = encodeURIComponent(title + ' ' + year);
+        
+        // Список источников
+        var sources = [
+            {
+                name: 'VidSrc',
+                url: 'https://vidsrc.me/embed/latest',
+                quality: 'HD',
+                search: 'https://vidsrc.me/videosearch?q=' + searchQuery
+            },
+            {
+                name: '2Embed',
+                url: 'https://www.2embed.to/embed/tmdb/movie/latest',
+                quality: 'HD',
+                search: 'https://www.2embed.to/embed/tmdb/search?query=' + searchQuery
+            },
+            {
+                name: 'SuperEmbed',
+                url: 'https://multiembed.mov/directstream.php?video_id=latest&tmdb=1',
+                quality: 'HD'
+            },
+            {
+                name: 'Filmix',
+                url: 'https://filmix.ac',
+                quality: 'FHD',
+                search: 'https://filmix.ac/search/' + searchQuery
+            }
+        ];
+        
+        // Создаем модальное окно
+        var modalHtml = '<div style="padding: 20px;">';
+        modalHtml += '<div style="font-size: 1.2em; margin-bottom: 20px; color: #ffd700;">Выберите источник для просмотра</div>';
+        
+        sources.forEach(function(source, index) {
+            modalHtml += '<div class="selector source-item" data-index="' + index + '" style="padding: 15px; margin: 10px 0; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid rgba(255,255,255,0.2);">';
+            modalHtml += '<div style="font-weight: bold; font-size: 1.1em;">' + source.name + '</div>';
+            modalHtml += '<div style="color: #aaa; margin-top: 5px;">Качество: ' + source.quality + '</div>';
+            modalHtml += '</div>';
+        });
+        
+        modalHtml += '</div>';
+        
+        Lampa.Modal.open({
+            title: 'Онлайн источники: ' + title,
+            html: modalHtml,
+            size: 'medium',
+            onReady: function(modal) {
+                modal.render.find('.source-item').on('hover:enter', function() {
+                    var index = $(this).data('index');
+                    var source = sources[index];
+                    
+                    // Если есть поисковый URL, используем его
+                    var url = source.search || source.url;
+                    
+                    // Запускаем плеер
+                    Lampa.Player.play({
+                        title: title,
+                        files: [{
+                            title: source.name + ' (' + source.quality + ')',
+                            url: url,
+                            quality: source.quality,
+                            format: 'iframe'
+                        }],
+                        poster: movie.poster || '',
+                        subtitle: 'Источник: ' + source.name
+                    });
+                    
+                    Lampa.Modal.close();
+                });
+            }
+        });
+    }
+    
+    // Добавляем кнопку в главное меню
+    function addOnlineButton() {
+        // Добавляем в боковое меню если есть
+        setTimeout(function() {
+            if (Lampa.Menu && Lampa.Menu.left) {
+                var menuItems = Lampa.Menu.left.items;
+                var hasOnlineItem = menuItems.some(function(item) {
+                    return item.name && item.name.includes('Online');
+                });
+                
+                if (!hasOnlineItem) {
+                    Lampa.Menu.left.add({
+                        name: 'Фильмы онлайн',
+                        component: 'online_movies_component',
+                        icon: 'online'
+                    });
+                }
+            }
+        }, 2000);
+    }
+    
+    // Создаем компонент для онлайн просмотра
+    var onlineComponent = {
         template: {
             url: '',
             html: '',
@@ -22,520 +159,75 @@
         },
         
         controller: function(params) {
-            let self = this;
-            let activity = Lampa.Activity.active();
+            var self = this;
+            var activity = Lampa.Activity.active();
             
             self.render = activity.render();
             self.params = params || {};
-            self.searchQuery = params.search || '';
-            self.results = [];
-            self.loading = false;
-            self.selectedItem = null;
-            self.sources = [];
-            self.currentPage = 1;
             
-            // Инициализация
             self.init = function() {
-                console.log('Free Movies plugin initialized');
+                var html = '<div style="padding: 20px;">';
+                html += '<h1 style="color: #ffd700; margin-bottom: 20px;">Фильмы онлайн</h1>';
+                html += '<p style="color: #ccc; margin-bottom: 30px;">Выберите источник для поиска фильмов:</p>';
                 
-                // Создаем интерфейс
-                self.createUI();
+                var sources = [
+                    { name: 'Filmix', url: 'https://filmix.ac', icon: '🎬' },
+                    { name: 'HDRezka', url: 'https://hdrezka.ag', icon: '🎥' },
+                    { name: 'VidSrc', url: 'https://vidsrc.me', icon: '📺' },
+                    { name: '2Embed', url: 'https://2embed.to', icon: '🔗' }
+                ];
                 
-                // Запускаем поиск если есть запрос
-                if(self.searchQuery) {
-                    self.performSearch();
-                }
+                sources.forEach(function(source, index) {
+                    html += '<div class="selector source-select" data-url="' + source.url + '" style="padding: 15px; margin: 10px 0; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center;">';
+                    html += '<span style="font-size: 1.5em; margin-right: 15px;">' + source.icon + '</span>';
+                    html += '<div>';
+                    html += '<div style="font-weight: bold; font-size: 1.1em;">' + source.name + '</div>';
+                    html += '<div style="color: #aaa; font-size: 0.9em;">' + source.url + '</div>';
+                    html += '</div>';
+                    html += '</div>';
+                });
                 
-                // Фокус
-                setTimeout(() => {
-                    Lampa.Controller.add('content', self.render);
-                    self.render.find('.search-input').trigger('focus');
-                }, 200);
-            };
-            
-            // Создание интерфейса
-            self.createUI = function() {
-                let html = `
-                    <div class="filmix-container">
-                        <div class="filmix-header">
-                            <div class="filmix-title">${manifest.name}</div>
-                            <div class="filmix-search">
-                                <input type="text" class="search-input selector" 
-                                       value="${self.searchQuery || ''}" 
-                                       placeholder="Введите название фильма или сериала...">
-                                <button class="search-btn selector">Поиск</button>
-                            </div>
-                        </div>
-                        
-                        <div class="filmix-content">
-                            <div class="results-container"></div>
-                            <div class="loading-container hide">
-                                <div class="loading-spinner"></div>
-                                <div class="loading-text">Поиск...</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                html += '</div>';
                 
                 self.render.html(html);
                 
-                // Обработчики событий
-                self.render.find('.search-btn').on('hover:enter', function() {
-                    const query = self.render.find('.search-input').val().trim();
-                    if(query) {
-                        self.searchQuery = query;
-                        self.performSearch();
-                    }
-                });
-                
-                self.render.find('.search-input').on('keypress', function(e) {
-                    if(e.keyCode === 13) { // Enter
-                        const query = $(this).val().trim();
-                        if(query) {
-                            self.searchQuery = query;
-                            self.performSearch();
-                        }
-                    }
-                });
-            };
-            
-            // Поиск фильмов
-            self.performSearch = function() {
-                self.loading = true;
-                self.results = [];
-                self.selectedItem = null;
-                self.updateUI();
-                
-                // Используем несколько методов поиска
-                Promise.any([
-                    searchViaVidsrc(self.searchQuery),
-                    searchVia2Embed(self.searchQuery),
-                    searchViaFilmix(self.searchQuery)
-                ]).then(results => {
-                    self.results = results || [];
-                    self.loading = false;
-                    self.updateUI();
-                }).catch(error => {
-                    console.error('Search failed:', error);
-                    self.loading = false;
-                    self.results = [{
-                        id: 'manual',
-                        title: self.searchQuery,
-                        year: new Date().getFullYear(),
-                        type: 'movie'
-                    }];
-                    self.updateUI();
-                });
-            };
-            
-            // Обновление интерфейса
-            self.updateUI = function() {
-                const resultsContainer = self.render.find('.results-container');
-                const loadingContainer = self.render.find('.loading-container');
-                
-                if(self.loading) {
-                    resultsContainer.hide();
-                    loadingContainer.removeClass('hide');
-                    return;
-                }
-                
-                loadingContainer.addClass('hide');
-                resultsContainer.show();
-                
-                let html = '';
-                
-                if(self.selectedItem) {
-                    // Показываем источники для выбранного фильма
-                    html = self.createSourcesUI();
-                } else if(self.results.length > 0) {
-                    // Показываем результаты поиска
-                    html = '<div class="results-grid">';
+                // Обработчики для выбора источника
+                self.render.find('.source-select').on('hover:enter', function() {
+                    var url = $(this).data('url');
                     
-                    self.results.forEach((item, index) => {
-                        html += `
-                            <div class="movie-card selector" data-index="${index}">
-                                <div class="movie-poster">
-                                    ${item.poster ? `<img src="${item.poster}" onerror="this.style.display='none'">` : 
-                                    '<div class="no-poster">🎬</div>'}
-                                </div>
-                                <div class="movie-info">
-                                    <div class="movie-title">${item.title || 'Без названия'}</div>
-                                    ${item.year ? `<div class="movie-year">${item.year}</div>` : ''}
-                                    ${item.description ? `<div class="movie-desc">${item.description.substring(0, 100)}...</div>` : ''}
-                                </div>
-                            </div>
-                        `;
+                    // Открываем плеер с выбранным источником
+                    Lampa.Player.play({
+                        title: 'Онлайн кинотеатр',
+                        files: [{
+                            title: 'Главная страница',
+                            url: url,
+                            quality: 'HD',
+                            format: 'iframe'
+                        }]
                     });
-                    
-                    html += '</div>';
-                } else {
-                    html = '<div class="no-results">Ничего не найдено. Попробуйте другой запрос.</div>';
-                }
-                
-                resultsContainer.html(html);
-                
-                // Обработчики для карточек
-                self.render.find('.movie-card').on('hover:enter', function() {
-                    const index = $(this).data('index');
-                    self.selectMovie(self.results[index]);
                 });
                 
-                // Обработчики для источников
-                self.render.find('.source-item').on('hover:enter', function() {
-                    const index = $(this).data('index');
-                    self.playMovie(self.sources[index]);
-                });
-                
-                // Фокус на первом элементе
-                setTimeout(() => {
-                    const firstItem = self.render.find('.selector').first();
-                    if(firstItem.length) {
-                        firstItem.trigger('focus');
-                        Lampa.Controller.collection(self.render.find('.selector'));
-                    }
-                }, 50);
+                // Добавляем фокус
+                setTimeout(function() {
+                    Lampa.Controller.add('content', self.render);
+                    self.render.find('.source-select').first().trigger('focus');
+                }, 100);
             };
-            
-            // Создание интерфейса источников
-            self.createSourcesUI = function() {
-                let html = `
-                    <div class="movie-details">
-                        <button class="back-btn selector">← Назад</button>
-                        <div class="selected-movie">
-                            <div class="movie-title-large">${self.selectedItem.title}</div>
-                            ${self.selectedItem.year ? `<div class="movie-year">${self.selectedItem.year}</div>` : ''}
-                        </div>
-                        
-                        <div class="sources-list">
-                            <div class="sources-title">Выберите источник:</div>
-                `;
-                
-                if(self.sources.length === 0) {
-                    html += '<div class="no-sources">Загрузка источников...</div>';
-                    
-                    // Автоматически загружаем источники
-                    self.loadSources();
-                } else {
-                    self.sources.forEach((source, index) => {
-                        html += `
-                            <div class="source-item selector" data-index="${index}">
-                                <div class="source-name">${source.name}</div>
-                                <div class="source-quality">${source.quality}</div>
-                            </div>
-                        `;
-                    });
-                }
-                
-                html += '</div></div>';
-                return html;
-            };
-            
-            // Выбор фильма
-            self.selectMovie = function(movie) {
-                self.selectedItem = movie;
-                self.sources = [];
-                self.updateUI();
-            };
-            
-            // Загрузка источников
-            self.loadSources = function() {
-                getMovieSources(self.selectedItem).then(sources => {
-                    self.sources = sources;
-                    self.updateUI();
-                });
-            };
-            
-            // Воспроизведение
-            self.playMovie = function(source) {
-                console.log('Playing from:', source.name);
-                
-                Lampa.Player.play({
-                    title: self.selectedItem.title,
-                    files: [{
-                        title: `${source.name} (${source.quality})`,
-                        url: source.url,
-                        quality: source.quality,
-                        headers: source.headers || {},
-                        format: source.type || 'iframe'
-                    }],
-                    poster: self.selectedItem.poster || ''
-                });
-            };
-            
-            // Обработчик кнопки "Назад"
-            self.render.on('click', '.back-btn', function() {
-                self.selectedItem = null;
-                self.sources = [];
-                self.updateUI();
-            });
             
             self.init();
             return self;
         }
     };
     
-    // ========== ПОИСК БЕЗ API КЛЮЧЕЙ ==========
+    // Регистрируем компонент
+    Lampa.Component.add('online_movies_component', onlineComponent);
     
-    // Поиск через VidSrc
-    async function searchViaVidsrc(query) {
-        try {
-            // VidSrc использует TMDB ID, но мы можем получить его через поиск
-            const searchUrl = `https://vidsrc.me/videos/${encodeURIComponent(query)}`;
-            
-            const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(searchUrl)}`, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0',
-                    'Accept': 'text/html'
-                }
-            });
-            
-            const html = await response.text();
-            const results = [];
-            
-            // Парсим HTML (упрощенно)
-            const titleMatch = html.match(/<title>([^<]+)<\/title>/);
-            if(titleMatch && !html.includes('404')) {
-                results.push({
-                    id: 'vidsrc_' + encodeURIComponent(query),
-                    title: query,
-                    source: 'vidsrc'
-                });
-            }
-            
-            return results;
-        } catch(error) {
-            console.error('VidSrc search error:', error);
-            return [];
-        }
+    // Запускаем плагин
+    if (window.Lampa) {
+        initPlugin();
+        console.log('Online Movies Plugin loaded successfully!');
+    } else {
+        document.addEventListener('lampa-loaded', initPlugin);
     }
-    
-    // Поиск через 2Embed
-    async function searchVia2Embed(query) {
-        try {
-            // 2Embed тоже использует TMDB
-            const searchUrl = `https://www.2embed.to/embed/tmdb/search?query=${encodeURIComponent(query)}`;
-            
-            const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(searchUrl)}`);
-            const html = await response.text();
-            
-            // Извлекаем данные из страницы
-            const results = [];
-            const regex = /data-id="(\d+)"[^>]*>([^<]+)</g;
-            let match;
-            
-            while((match = regex.exec(html)) !== null) {
-                results.push({
-                    id: match[1],
-                    title: match[2].trim(),
-                    source: '2embed'
-                });
-            }
-            
-            return results.slice(0, 10);
-        } catch(error) {
-            console.error('2Embed search error:', error);
-            return [];
-        }
-    }
-    
-    // Поиск через Filmix (парсинг)
-    async function searchViaFilmix(query) {
-        try {
-            const searchUrl = `https://filmix.ac/search/${encodeURIComponent(query)}`;
-            
-            const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(searchUrl)}`, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0',
-                    'Referer': 'https://filmix.ac/'
-                }
-            });
-            
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            const results = [];
-            const items = doc.querySelectorAll('.short-story, .search-item');
-            
-            items.forEach(item => {
-                const titleEl = item.querySelector('.short-title, .search-title');
-                const posterEl = item.querySelector('img');
-                const linkEl = item.querySelector('a');
-                
-                if(titleEl && linkEl) {
-                    const title = titleEl.textContent.trim();
-                    const href = linkEl.getAttribute('href');
-                    const poster = posterEl ? posterEl.getAttribute('src') : null;
-                    
-                    // Извлекаем год из заголовка
-                    const yearMatch = title.match(/\((\d{4})\)/);
-                    const year = yearMatch ? yearMatch[1] : '';
-                    
-                    results.push({
-                        id: href,
-                        title: title.replace(/\(\d{4}\)/, '').trim(),
-                        year: year,
-                        poster: poster ? (poster.startsWith('//') ? 'https:' + poster : poster) : null,
-                        source: 'filmix',
-                        url: 'https://filmix.ac' + href
-                    });
-                }
-            });
-            
-            return results;
-        } catch(error) {
-            console.error('Filmix search error:', error);
-            return [];
-        }
-    }
-    
-    // Получение источников для фильма
-    async function getMovieSources(movie) {
-        const sources = [];
-        
-        // Пробуем разные бесплатные источники
-        const sourcePromises = [
-            getVidsrcSource(movie),
-            get2EmbedSource(movie),
-            getFilmixSource(movie),
-            getSuperembedSource(movie)
-        ];
-        
-        try {
-            const allSources = await Promise.allSettled(sourcePromises);
-            
-            allSources.forEach(result => {
-                if(result.status === 'fulfilled' && result.value) {
-                    sources.push(...result.value);
-                }
-            });
-            
-            // Если ничего не нашли, создаем стандартные источники
-            if(sources.length === 0) {
-                sources.push(...createFallbackSources(movie));
-            }
-            
-            return sources;
-        } catch(error) {
-            console.error('Error getting sources:', error);
-            return createFallbackSources(movie);
-        }
-    }
-    
-    // Источник через VidSrc
-    async function getVidsrcSource(movie) {
-        try {
-            // VidSrc поддерживает TMDB ID
-            // Если у нас нет ID, используем заглушку
-            const vidsrcId = movie.id && movie.id.startsWith('tmdb_') ? 
-                movie.id.replace('tmdb_', '') : 'latest';
-            
-            return [{
-                name: 'VidSrc',
-                quality: 'HD',
-                url: `https://vidsrc.me/embed/${vidsrcId}`,
-                type: 'iframe'
-            }];
-        } catch(error) {
-            return [];
-        }
-    }
-    
-    // Источник через 2Embed
-    async function get2EmbedSource(movie) {
-        try {
-            return [{
-                name: '2Embed',
-                quality: 'HD',
-                url: `https://www.2embed.to/embed/tmdb/movie/${movie.id || 'latest'}`,
-                type: 'iframe'
-            }];
-        } catch(error) {
-            return [];
-        }
-    }
-    
-    // Источник через SuperEmbed
-    async function getSuperembedSource(movie) {
-        try {
-            return [{
-                name: 'SuperEmbed',
-                quality: 'HD',
-                url: `https://multiembed.mov/directstream.php?video_id=${movie.id || 'latest'}&tmdb=1`,
-                type: 'iframe'
-            }];
-        } catch(error) {
-            return [];
-        }
-    }
-    
-    // Запасные источники
-    function createFallbackSources(movie) {
-        const query = encodeURIComponent(movie.title);
-        
-        return [
-            {
-                name: 'Поиск в Google',
-                quality: 'Разное',
-                url: `https://www.google.com/search?q=${query}+смотреть+онлайн+бесплатно`,
-                type: 'browser'
-            },
-            {
-                name: 'YouTube',
-                quality: 'HD',
-                url: `https://www.youtube.com/results?search_query=${query}+фильм`,
-                type: 'browser'
-            }
-        ];
-    }
-    
-    // ========== СТИЛИ ==========
-    function addStyles() {
-        const css = `
-            <style>
-                .filmix-container {
-                    padding: 20px;
-                    max-width: 1200px;
-                    margin: 0 auto;
-                }
-                
-                .filmix-header {
-                    margin-bottom: 30px;
-                }
-                
-                .filmix-title {
-                    font-size: 2em;
-                    margin-bottom: 15px;
-                    color: #ffd700;
-                }
-                
-                .filmix-search {
-                    display: flex;
-                    gap: 10px;
-                }
-                
-                .search-input {
-                    flex: 1;
-                    padding: 10px 15px;
-                    background: rgba(255,255,255,0.1);
-                    border: 1px solid rgba(255,255,255,0.2);
-                    border-radius: 5px;
-                    color: white;
-                    font-size: 1em;
-                }
-                
-                .search-btn {
-                    padding: 10px 20px;
-                    background: #ffd700;
-                    color: #000;
-                    border: none;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-weight: bold;
-                }
-                
-                .search-btn.focus {
-                    background: #fffacd;
-                }
-                
-                .results-grid {
+
+})();
