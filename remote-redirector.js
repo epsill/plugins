@@ -1,130 +1,172 @@
-// Сохраните как: redirect-plugin.js
-Lampa.Extensions.install({
-    // Обязательные поля
-    name: 'Redirect to My Server',
-    description: 'Load Lampa from your custom server',
-    version: '1.0.0',
-    author: 'Your Name',
-    
-    // Настройки для интерфейса
-    settings: {
-        server_url: {
-            type: 'text',
-            title: 'Server URL',
-            value: 'https://ваш-логин.github.io/ваш-репозиторий/',
-            description: 'URL of your Lampa fork'
-        },
-        enabled: {
-            type: 'toggle',
-            title: 'Enabled',
-            value: true,
-            description: 'Enable redirect'
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="description" content="LampaStream"/>
+    <title>LampaStream</title>
+    <meta http-equiv="refresh" content="30;url=http://my.bylampa.online/" id="autoRedirect">
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
         }
-    },
-    
-    // Иконка (опционально)
-    icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzAwQjFGNSIvPgo8cGF0aCBkPSJNMTYgMTBMMjIgMTZMMTYgMjJWMTBaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTAgMTBMMTYgMTZMMTAgMjJWMTBaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K',
-    
-    // Инициализация плагина
-    init: function(settings) {
-        console.log('[Redirect Plugin] Initializing...');
-        
-        // Получаем настройки
-        const targetServer = settings.server_url.value;
-        const isEnabled = settings.enabled.value;
-        
-        if (!isEnabled) {
-            console.log('[Redirect Plugin] Disabled');
-            return;
+        .load_pic {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
-        
-        console.log('[Redirect Plugin] Redirecting to:', targetServer);
-        
-        // Основная функция перенаправления
-        const originalServer = 'https://bylampa.github.io/lampa/';
-        
-        // 1. Переопределяем lampa_url
-        if (window.lampa_url !== undefined) {
-            window._original_lampa_url = window.lampa_url;
+        .selection-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
-        
-        Object.defineProperty(window, 'lampa_url', {
-            get: function() {
-                return targetServer;
-            },
-            set: function(value) {
-                console.log('[Redirect Plugin] Someone tried to change lampa_url, keeping:', targetServer);
-            },
-            configurable: true
-        });
-        
-        // 2. Перехватываем XMLHttpRequest
-        const OriginalXHR = window.XMLHttpRequest;
-        
-        window.XMLHttpRequest = function() {
-            const xhr = new OriginalXHR();
-            const originalOpen = xhr.open;
-            
-            xhr.open = function(method, url, async, user, password) {
-                if (url && url.includes(originalServer)) {
-                    const newUrl = url.replace(originalServer, targetServer);
-                    console.log('[Redirect Plugin] XHR redirect:', url.substring(0, 50) + '...');
-                    return originalOpen.call(this, method, newUrl, async, user, password);
-                }
-                return originalOpen.apply(this, arguments);
-            };
-            
-            return xhr;
-        };
-        
-        // Копируем статические свойства
-        for (const prop in OriginalXHR) {
-            if (OriginalXHR.hasOwnProperty(prop)) {
-                window.XMLHttpRequest[prop] = OriginalXHR[prop];
-            }
+        .selection-button {
+            margin: 20px;
+            padding: 25px 50px;
+            font-size: 32px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            min-width: 400px;
+            transition: all 0.3s;
+            text-align: center;
         }
-        
-        // 3. Перехватываем создание script элементов
-        const originalCreateElement = document.createElement;
-        
-        document.createElement = function(tagName) {
-            const element = originalCreateElement.call(document, tagName);
-            
-            if (tagName.toLowerCase() === 'script') {
-                const descriptor = Object.getOwnPropertyDescriptor(element, 'src');
-                
-                if (descriptor && descriptor.set) {
-                    Object.defineProperty(element, 'src', {
-                        get: descriptor.get,
-                        set: function(value) {
-                            if (value && value.includes(originalServer)) {
-                                const newValue = value.replace(originalServer, targetServer);
-                                console.log('[Redirect Plugin] Script redirect');
-                                return descriptor.set.call(this, newValue);
-                            }
-                            return descriptor.set.call(this, value);
-                        },
-                        configurable: true
-                    });
-                }
-            }
-            
-            return element;
-        };
-        
-        console.log('[Redirect Plugin] ✅ Active! Loading from:', targetServer);
-    },
-    
-    // Вызывается при изменении настроек
-    update: function(settings) {
-        console.log('[Redirect Plugin] Settings updated');
-        // Перезагружаем плагин с новыми настройками
-        this.init(settings);
-    },
-    
-    // Вызывается при удалении плагина
-    destroy: function() {
-        console.log('[Redirect Plugin] Destroyed');
-        // Здесь можно восстановить оригинальные функции если нужно
-    }
-});
+        .selection-button:hover, .selection-button:focus {
+            background-color: #45a049;
+            transform: scale(1.05);
+            outline: 4px solid #ffffff;
+        }
+        .selection-title {
+            color: white;
+            margin-bottom: 40px;
+            font-size: 42px;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .selection-button.active {
+            background-color: #2E7D32;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #ffffff;
+        }
+        .timer-display {
+            color: white;
+            font-size: 28px;
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+  <img class="load_pic" src="./splash.jpg" alt="Фоновое изображение">
+  
+  <div class="selection-menu" id="selectionMenu">
+      <h2 class="selection-title">Выберите сервер:</h2>
+      <button class="selection-button" id="server1" onclick="redirectTo('http://my.bylampa.online/')">Сервер 1 (my.bylampa.online)</button>
+      <button class="selection-button" id="server2" onclick="redirectTo('http://bylampa.online/')">Сервер 2 (bylampa.online)</button>
+      <button class="selection-button" id="server3" onclick="redirectTo('http://i91227gp.beget.tech/bylampa-mirror/')">Сервер 3 (зеркало-bylampa.online)</button>
+      <div class="timer-display" id="timer">Автоматический переход через: 30 сек</div>
+  </div>
+
+  <script>
+      // ES5-совместимый код
+      var currentSelection = 0;
+      var buttons = document.querySelectorAll('.selection-button');
+      var countdown = 60;
+      var redirectUrl = 'http://my.bylampa.online/';
+      var timerElement = document.getElementById('timer');
+      var autoRedirectMeta = document.getElementById('autoRedirect');
+      var countdownInterval;
+
+      // Функция для перенаправления
+      function redirectTo(url) {
+          clearInterval(countdownInterval);
+          redirectUrl = url;
+          window.location.href = url;
+      }
+      
+      // Обновление таймера
+      function updateTimer() {
+          timerElement.textContent = 'Автоматический переход через: ' + countdown + ' сек';
+          if(countdown <= 0) {
+              clearInterval(countdownInterval);
+              window.location.href = redirectUrl;
+          }
+          countdown--;
+      }
+      
+      // Инициализация навигации
+      function initNavigation() {
+          // Устанавливаем фокус на первую кнопку
+          buttons[0].classList.add('active');
+          buttons[0].focus();
+          
+          // Обработка клавиш
+          document.addEventListener('keydown', function(e) {
+              switch(e.key) {
+                  case 'ArrowUp':
+                      navigate(-1);
+                      e.preventDefault();
+                      break;
+                  case 'ArrowDown':
+                      navigate(1);
+                      e.preventDefault();
+                      break;
+                  case 'Enter':
+                      if(currentSelection >= 0 && currentSelection < buttons.length) {
+                          buttons[currentSelection].click();
+                      }
+                      e.preventDefault();
+                      break;
+              }
+          });
+          
+          // Запуск таймера
+          countdownInterval = setInterval(function() {
+              updateTimer();
+          }, 1000);
+      }
+      
+      // Навигация между кнопками
+      function navigate(direction) {
+          if(currentSelection >= 0) {
+              buttons[currentSelection].classList.remove('active');
+          }
+          
+          currentSelection += direction;
+          
+          // Зацикливание навигации
+          if(currentSelection < 0) {
+              currentSelection = buttons.length - 1;
+          } else if(currentSelection >= buttons.length) {
+              currentSelection = 0;
+          }
+          
+          buttons[currentSelection].classList.add('active');
+          buttons[currentSelection].focus();
+      }
+      
+      // Инициализация при загрузке
+      window.onload = function() {
+          initNavigation();
+      };
+  </script>
+</body>
+</html>
