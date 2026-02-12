@@ -15,6 +15,59 @@
         Lampa.Storage.set('location_server', DEFAULT_SERVER);
     }
 
+    // ============ ФУНКЦИИ ДЛЯ РАБОТЫ С ИСТОРИЕЙ ============
+    function getHistory() {
+        try {
+            var data = Lampa.Storage.get('server_history');
+            // Если данные есть и это строка, пробуем распарсить
+            if (data) {
+                // Проверяем, не является ли data уже массивом (на всякий случай)
+                if (Array.isArray(data)) {
+                    return data;
+                }
+                // Пробуем распарсить JSON
+                return JSON.parse(data);
+            }
+        } catch(e) {
+            console.log('Ошибка парсинга истории, создаем новую');
+        }
+        // В случае любой ошибки возвращаем пустой массив
+        return [];
+    }
+
+    function saveHistory(history) {
+        try {
+            Lampa.Storage.set('server_history', JSON.stringify(history));
+        } catch(e) {
+            console.log('Ошибка сохранения истории');
+        }
+    }
+
+    function addToHistory(server) {
+        if (!server || server.trim() === '') return;
+        
+        var history = getHistory();
+        
+        // Убеждаемся что history - это массив
+        if (!Array.isArray(history)) {
+            history = [];
+        }
+        
+        var index = history.indexOf(server);
+        if (index !== -1) {
+            history.splice(index, 1);
+        }
+        
+        history.unshift(server);
+        
+        if (history.length > 5) {
+            history = history.slice(0, 5);
+        }
+        
+        saveHistory(history);
+    }
+    // ========================================================
+
     function startMe() {
         
         $('#REDIRECT').remove()
@@ -31,36 +84,11 @@
             }, 10);
         }
         
-        // ============ ИСТОРИЯ СЕРВЕРОВ ============
-        function addToHistory(server) {
-            if (!server || server.trim() === '') return;
-            
-            var history = [];
-            try {
-                history = JSON.parse(Lampa.Storage.get('server_history') || '[]');
-            } catch(e) {
-                history = [];
-            }
-            
-            var index = history.indexOf(server);
-            if (index !== -1) {
-                history.splice(index, 1);
-            }
-            
-            history.unshift(server);
-            
-            if (history.length > 5) {
-                history = history.slice(0, 5);
-            }
-            
-            Lampa.Storage.set('server_history', JSON.stringify(history));
-        }
-        
+        // Добавляем текущий сервер в историю
         var currentServer = Lampa.Storage.get('location_server');
         if (currentServer) {
             addToHistory(currentServer);
         }
-        // ===========================================
         
         // ============ БЫСТРЫЙ ПЕРЕКЛЮЧАТЕЛЬ ============
         function addQuickSwitcher() {
@@ -78,22 +106,17 @@
                     return;
                 }
                 
-                var history = [];
-                try {
-                    history = JSON.parse(Lampa.Storage.get('server_history') || '[]');
-                } catch(e) {
-                    history = [];
-                }
+                var history = getHistory();
                 
-                // Если истории нет - создаем базовую
-                if (history.length < 2) {
+                // Если истории нет или это не массив - создаем базовую
+                if (!Array.isArray(history) || history.length < 2) {
                     history = [current];
                     if (current !== DEFAULT_SERVER) {
                         history.push(DEFAULT_SERVER);
                     } else {
                         history.push('bylampa.online');
                     }
-                    Lampa.Storage.set('server_history', JSON.stringify(history));
+                    saveHistory(history);
                     Lampa.Noty.show('Создана история серверов');
                 }
                 
@@ -102,7 +125,7 @@
                 if (currentIndex === -1) {
                     history.unshift(current);
                     if (history.length > 5) history.pop();
-                    Lampa.Storage.set('server_history', JSON.stringify(history));
+                    saveHistory(history);
                     currentIndex = 0;
                 }
                 
@@ -119,7 +142,7 @@
             var pressTimer;
             $('#SERVER_SWITCHER').on('hover:enter', function() {
                 pressTimer = setTimeout(function() {
-                    var history = JSON.parse(Lampa.Storage.get('server_history') || '[]');
+                    var history = getHistory();
                     if (history.length > 0) {
                         Lampa.Noty.show('История серверов:\n' + history.join('\n'), {timeout: 5000});
                     } else {
@@ -166,7 +189,6 @@
                     $('#REDIRECT').remove();
                 }
                 
-                // ВАЖНО: всегда вызываем startMe при изменении
                 startMe();
             }         
         });
