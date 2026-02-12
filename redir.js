@@ -19,19 +19,15 @@
     function getHistory() {
         try {
             var data = Lampa.Storage.get('server_history');
-            // Если данные есть и это строка, пробуем распарсить
             if (data) {
-                // Проверяем, не является ли data уже массивом (на всякий случай)
                 if (Array.isArray(data)) {
                     return data;
                 }
-                // Пробуем распарсить JSON
                 return JSON.parse(data);
             }
         } catch(e) {
             console.log('Ошибка парсинга истории, создаем новую');
         }
-        // В случае любой ошибки возвращаем пустой массив
         return [];
     }
 
@@ -48,7 +44,6 @@
         
         var history = getHistory();
         
-        // Убеждаемся что history - это массив
         if (!Array.isArray(history)) {
             history = [];
         }
@@ -117,7 +112,6 @@
                         history.push('bylampa.online');
                     }
                     saveHistory(history);
-                    Lampa.Noty.show('Создана история серверов');
                 }
                 
                 var currentIndex = history.indexOf(current);
@@ -133,25 +127,15 @@
                 var nextServer = history[nextIndex];
                 
                 Lampa.Storage.set('location_server', nextServer);
-                Lampa.Noty.show('✓ Сервер: ' + nextServer);
+                
+                // ПОКАЗЫВАЕМ ТОЛЬКО ТЕКУЩИЙ СЕРВЕР НА 3.5 СЕКУНДЫ
+                Lampa.Noty.show('✓ Сервер: ' + nextServer, {timeout: 3500});
                 
                 $('#REDIRECT').remove();
                 startMe();
             });
             
-            var pressTimer;
-            $('#SERVER_SWITCHER').on('hover:enter', function() {
-                pressTimer = setTimeout(function() {
-                    var history = getHistory();
-                    if (history.length > 0) {
-                        Lampa.Noty.show('История серверов:\n' + history.join('\n'), {timeout: 5000});
-                    } else {
-                        Lampa.Noty.show('История пуста');
-                    }
-                }, 1000);
-            }).on('hover:leave', function() {
-                clearTimeout(pressTimer);
-            });
+            // УБИРАЕМ ПОКАЗ СПИСКА СЕРВЕРОВ - УДАЛЕН БЛОК ДОЛГОГО НАЖАТИЯ
         }
         
         addQuickSwitcher();
