@@ -94,10 +94,31 @@
             
             $('#REDIRECT').after(switcherBUTT);
             
-            $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function() {
+            // Функция для сохранения фокуса
+            function setFocusToSwitcher() {
+                setTimeout(function() {
+                    // Находим кнопку и устанавливаем на нее фокус
+                    var $btn = $('#SERVER_SWITCHER');
+                    if ($btn.length) {
+                        // Убираем фокус со всех элементов
+                        $('.head__action').removeClass('hover focused active');
+                        // Добавляем фокус на нашу кнопку
+                        $btn.addClass('hover focused');
+                        // Прокручиваем к кнопке если нужно
+                        $btn.trigger('focus');
+                    }
+                }, 50); // Небольшая задержка чтобы DOM обновился
+            }
+            
+            $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function(e) {
+                // Предотвращаем стандартное поведение потери фокуса
+                e.preventDefault();
+                e.stopPropagation();
+                
                 var current = Lampa.Storage.get('location_server');
                 if (!current) {
                     Lampa.Noty.show('Сначала укажите сервер в настройках');
+                    setFocusToSwitcher();
                     return;
                 }
                 
@@ -133,17 +154,30 @@
                 
                 $('#REDIRECT').remove();
                 startMe();
+                
+                // ВОЗВРАЩАЕМ ФОКУС НА КНОПКУ
+                setFocusToSwitcher();
             });
             
-            // УБИРАЕМ ПОКАЗ СПИСКА СЕРВЕРОВ - УДАЛЕН БЛОК ДОЛГОГО НАЖАТИЯ
+            // Также сохраняем фокус при нажатии на REDIRECT кнопку
+            $('#REDIRECT').on('hover:enter hover:click hover:touch', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var server = Lampa.Storage.get('location_server');
+                if (server) {
+                    window.location.href = server_protocol + server;
+                }
+                
+                // Сохраняем фокус перед редиректом
+                $(this).addClass('hover focused');
+            });
+            
+            // Убираем долгое нажатие
         }
         
         addQuickSwitcher();
         // ===========================================
-        
-        $('#REDIRECT').on('hover:enter hover:click hover:touch', function() {
-            window.location.href = server_protocol + Lampa.Storage.get('location_server');
-        });
         
         Lampa.SettingsApi.addComponent({
             component: 'location_redirect',
