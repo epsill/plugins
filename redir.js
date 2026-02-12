@@ -63,15 +63,97 @@
     }
     // ========================================================
 
+    // Функция переключения сервера БЕЗ пересоздания кнопок
+    function switchServer() {
+        var current = Lampa.Storage.get('location_server');
+        if (!current) {
+            Lampa.Noty.show('Сначала укажите сервер в настройках');
+            return;
+        }
+        
+        var history = getHistory();
+        
+        // Если истории нет или это не массив - создаем базовую
+        if (!Array.isArray(history) || history.length < 2) {
+            history = [current];
+            if (current !== DEFAULT_SERVER) {
+                history.push(DEFAULT_SERVER);
+            } else {
+                history.push('bylampa.online');
+            }
+            saveHistory(history);
+        }
+        
+        var currentIndex = history.indexOf(current);
+        
+        if (currentIndex === -1) {
+            history.unshift(current);
+            if (history.length > 5) history.pop();
+            saveHistory(history);
+            currentIndex = 0;
+        }
+        
+        var nextIndex = (currentIndex + 1) % history.length;
+        var nextServer = history[nextIndex];
+        
+        // Просто сохраняем новый сервер, НЕ пересоздаем кнопки
+        Lampa.Storage.set('location_server', nextServer);
+        
+        // Обновляем title у кнопки (показывает текущий сервер при наведении)
+        $('#SERVER_SWITCHER').attr('title', 'Текущий сервер: ' + nextServer);
+        
+        // ПОКАЗЫВАЕМ ТОЛЬКО ТЕКУЩИЙ СЕРВЕР НА 3.5 СЕКУНДЫ
+        Lampa.Noty.show('✓ Сервер: ' + nextServer, {timeout: 3500});
+        
+        // НЕ вызываем startMe() - кнопки не пересоздаются!
+    }
+
     function startMe() {
         
-        $('#REDIRECT').remove()
+        // Удаляем старые кнопки только при первом запуске
+        if (!window.redirect_initialized) {
+            $('#REDIRECT').remove();
+            $('#SERVER_SWITCHER').remove();
+            
+            var domainSVG = icon_server_redirect;
+            var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen">' + domainSVG + '</div>';
+            
+            $('#app > div.head > div > div.head__actions').append(domainBUTT);
+            $('#REDIRECT').insertAfter('div[class="head__action selector open--settings"]');
+            
+            // ============ БЫСТРЫЙ ПЕРЕКЛЮЧАТЕЛЬ ============
+            var switcherSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
+            var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Быстрое переключение сервера">' + switcherSVG + '</div>';
+            
+            $('#REDIRECT').after(switcherBUTT);
+            
+            // Обработчик для переключения БЕЗ перезагрузки кнопок
+            $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                switchServer(); // Просто переключаем сервер
+            });
+            
+            // Обработчик для REDIRECT кнопки
+            $('#REDIRECT').on('hover:enter hover:click hover:touch', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var server = Lampa.Storage.get('location_server');
+                if (server) {
+                    window.location.href = server_protocol + server;
+                }
+            });
+            
+            window.redirect_initialized = true;
+        }
         
-        var domainSVG = icon_server_redirect;
-        var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen">' + domainSVG + '</div>';
-        
-        $('#app > div.head > div > div.head__actions').append(domainBUTT);
-        $('#REDIRECT').insertAfter('div[class="head__action selector open--settings"]');
+        // Добавляем текущий сервер в историю
+        var currentServer = Lampa.Storage.get('location_server');
+        if (currentServer) {
+            addToHistory(currentServer);
+            // Обновляем title кнопки
+            $('#SERVER_SWITCHER').attr('title', 'Текущий сервер: ' + currentServer);
+        }
            
         if(!Lampa.Storage.get('location_server')) {
             setTimeout(function(){
@@ -79,150 +161,60 @@
             }, 10);
         }
         
-        // Добавляем текущий сервер в историю
-        var currentServer = Lampa.Storage.get('location_server');
-        if (currentServer) {
-            addToHistory(currentServer);
-        }
-        
-        // ============ БЫСТРЫЙ ПЕРЕКЛЮЧАТЕЛЬ ============
-        function addQuickSwitcher() {
-            $('#SERVER_SWITCHER').remove();
-            
-            var switcherSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
-            var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Быстрое переключение сервера">' + switcherSVG + '</div>';
-            
-            $('#REDIRECT').after(switcherBUTT);
-            
-            // Функция для сохранения фокуса
-            function setFocusToSwitcher() {
-                setTimeout(function() {
-                    // Находим кнопку и устанавливаем на нее фокус
-                    var $btn = $('#SERVER_SWITCHER');
-                    if ($btn.length) {
-                        // Убираем фокус со всех элементов
-                        $('.head__action').removeClass('hover focused active');
-                        // Добавляем фокус на нашу кнопку
-                        $btn.addClass('hover focused');
-                        // Прокручиваем к кнопке если нужно
-                        $btn.trigger('focus');
-                    }
-                }, 50); // Небольшая задержка чтобы DOM обновился
-            }
-            
-            $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function(e) {
-                // Предотвращаем стандартное поведение потери фокуса
-                e.preventDefault();
-                e.stopPropagation();
-                
-                var current = Lampa.Storage.get('location_server');
-                if (!current) {
-                    Lampa.Noty.show('Сначала укажите сервер в настройках');
-                    setFocusToSwitcher();
-                    return;
-                }
-                
-                var history = getHistory();
-                
-                // Если истории нет или это не массив - создаем базовую
-                if (!Array.isArray(history) || history.length < 2) {
-                    history = [current];
-                    if (current !== DEFAULT_SERVER) {
-                        history.push(DEFAULT_SERVER);
-                    } else {
-                        history.push('bylampa.online');
-                    }
-                    saveHistory(history);
-                }
-                
-                var currentIndex = history.indexOf(current);
-                
-                if (currentIndex === -1) {
-                    history.unshift(current);
-                    if (history.length > 5) history.pop();
-                    saveHistory(history);
-                    currentIndex = 0;
-                }
-                
-                var nextIndex = (currentIndex + 1) % history.length;
-                var nextServer = history[nextIndex];
-                
-                Lampa.Storage.set('location_server', nextServer);
-                
-                // ПОКАЗЫВАЕМ ТОЛЬКО ТЕКУЩИЙ СЕРВЕР НА 3.5 СЕКУНДЫ
-                Lampa.Noty.show('✓ Сервер: ' + nextServer, {timeout: 3500});
-                
-                $('#REDIRECT').remove();
-                startMe();
-                
-                // ВОЗВРАЩАЕМ ФОКУС НА КНОПКУ
-                setFocusToSwitcher();
-            });
-            
-            // Также сохраняем фокус при нажатии на REDIRECT кнопку
-            $('#REDIRECT').on('hover:enter hover:click hover:touch', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                var server = Lampa.Storage.get('location_server');
-                if (server) {
-                    window.location.href = server_protocol + server;
-                }
-                
-                // Сохраняем фокус перед редиректом
-                $(this).addClass('hover focused');
-            });
-            
-            // Убираем долгое нажатие
-        }
-        
-        addQuickSwitcher();
         // ===========================================
         
-        Lampa.SettingsApi.addComponent({
-            component: 'location_redirect',
-            name: 'Смена сервера',
-            icon: icon_server_redirect
-        });
-        
-        Lampa.SettingsApi.addParam({
-            component: 'location_redirect',
-            param: {
-                name: 'location_server',
-                type: 'input', 
-                values: '',
-                placeholder: 'Например: ' + DEFAULT_SERVER,
-                default: DEFAULT_SERVER
-            },
-            field: {
-                name: 'Адрес сервера',
-                description: 'Нажмите для ввода, смену сервера можно будет сделать кнопкой в верхнем баре'
-            },
-            onChange: function (value) {
-                if (value && value.trim() !== '') {
-                    addToHistory(value);
+        // Добавляем компонент настроек только один раз
+        if (!window.settings_added) {
+            Lampa.SettingsApi.addComponent({
+                component: 'location_redirect',
+                name: 'Смена сервера',
+                icon: icon_server_redirect
+            });
+            
+            Lampa.SettingsApi.addParam({
+                component: 'location_redirect',
+                param: {
+                    name: 'location_server',
+                    type: 'input', 
+                    values: '',
+                    placeholder: 'Например: ' + DEFAULT_SERVER,
+                    default: DEFAULT_SERVER
+                },
+                field: {
+                    name: 'Адрес сервера',
+                    description: 'Нажмите для ввода, смену сервера можно будет сделать кнопкой в верхнем баре'
+                },
+                onChange: function (value) {
+                    if (value && value.trim() !== '') {
+                        addToHistory(value);
+                    }
+                    
+                    if (value == '') {
+                        $('#REDIRECT').remove();
+                    } else {
+                        // Обновляем title кнопки при изменении в настройках
+                        $('#SERVER_SWITCHER').attr('title', 'Текущий сервер: ' + value);
+                    }
+                    
+                    // НЕ вызываем startMe() - кнопки не пересоздаем!
+                }         
+            });
+            
+            Lampa.SettingsApi.addParam({
+                component: 'location_redirect',
+                param: {
+                    name: 'const_redirect',
+                    type: 'trigger',
+                    default: false
+                },
+                field: {
+                    name: 'Постоянный редирект',
+                    description: 'Чтобы отключить постоянный редирект зажмите клавишу ВНИЗ при загрузке приложения' 
                 }
-                
-                if (value == '') {
-                    $('#REDIRECT').remove();
-                }
-                
-                startMe();
-            }         
-        });
-        
-        Lampa.SettingsApi.addParam({
-            component: 'location_redirect',
-            param: {
-                name: 'const_redirect',
-                type: 'trigger',
-                default: false
-            },
-            field: {
-                name: 'Постоянный редирект',
-                description: 'Чтобы отключить постоянный редирект зажмите клавишу ВНИЗ при загрузке приложения' 
-            }
-        });
+            });
+            
+            window.settings_added = true;
+        }
 
         Lampa.Keypad.listener.follow("keydown", function (e) {
             if (e.code === 40 || e.code === 29461) {
