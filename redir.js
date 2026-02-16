@@ -87,9 +87,9 @@
         
         $('#REDIRECT').after(switcherBUTT);
         
-        // Кнопка очистки истории (корзина)
+        // Кнопка очистки истории (корзина) - без подтверждения
         var clearSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
-        var clearBUTT = '<div id="CLEAR_HISTORY_BTN" class="head__action selector clear-history" title="Очистить историю серверов">' + clearSVG + '</div>';
+        var clearBUTT = '<div id="CLEAR_HISTORY_BTN" class="head__action selector clear-history" title="Очистить историю серверов (без подтверждения)">' + clearSVG + '</div>';
         
         $('#SERVER_SWITCHER').after(clearBUTT);
         
@@ -152,26 +152,10 @@
             Lampa.Noty.show('✓ Сервер: ' + nextServer + ' (HTTP)', {timeout: 3500});
         });
         
-        // Кнопка очистки истории
+        // Кнопка очистки истории - БЕЗ ДИАЛОГА, сразу очищаем
         $('#CLEAR_HISTORY_BTN').on('hover:enter', function(e) {
             e.stopPropagation();
-            
-            Lampa.Dialog.show({
-                title: 'Очистка истории',
-                text: 'Удалить все серверы из истории? Останется только текущий.',
-                buttons: [
-                    {
-                        title: 'Да',
-                        handler: function() {
-                            clearHistory();
-                        }
-                    },
-                    {
-                        title: 'Нет',
-                        handler: function() {}
-                    }
-                ]
-            });
+            clearHistory(); // Просто очищаем и показываем уведомление
         });
         
         // Обработчик для основной кнопки (редирект)
