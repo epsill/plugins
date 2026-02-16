@@ -92,6 +92,16 @@
         }
     }
 
+    // Функция для принудительного HTTP (даже если сервер пытается редиректить на HTTPS)
+    function forceHttpRedirect(url) {
+        // Если вдруг в url уже есть протокол - заменяем на http
+        if (url.indexOf('://') !== -1) {
+            url = url.replace(/^https?:\/\//, '');
+        }
+        // Всегда добавляем http://
+        window.location.href = 'http://' + url;
+    }
+
     function startMe() {
         
         // Создаем кнопки
@@ -157,8 +167,9 @@
         
         // Обработчик для основной кнопки (редирект)
         $('#REDIRECT').on('hover:enter hover:click hover:touch', function() {
-            // ВАЖНО: Всегда используем HTTP протокол
-            window.location.href = server_protocol + Lampa.Storage.get('location_server');
+            var server = Lampa.Storage.get('location_server');
+            // Используем функцию принудительного HTTP
+            forceHttpRedirect(server);
         });
         
         // Настройки (без изменений)
@@ -223,8 +234,8 @@
 
         setTimeout(function () {
             if(Lampa.Storage.field('const_redirect') == true) {
-                // Постоянный редирект тоже по HTTP
-                window.location.href = server_protocol + Lampa.Storage.get('location_server');
+                var server = Lampa.Storage.get('location_server');
+                forceHttpRedirect(server);
             }
         }, 300);
     }
