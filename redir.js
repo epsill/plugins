@@ -82,7 +82,7 @@
         
         // Кнопка быстрого переключения
         var switcherSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
-        var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Короткое нажатие: переключить сервер | Долгое нажатие: очистить историю">' + switcherSVG + '</div>';
+        var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Короткое нажатие: переключить сервер | Долгое нажатие (3 сек): очистить историю">' + switcherSVG + '</div>';
         
         $('#REDIRECT').after(switcherBUTT);
         
@@ -98,25 +98,10 @@
         window.location.href = 'http://' + url;
     }
 
-    function showClearHistoryDialog() {
-        Lampa.Dialog.show({
-            title: 'Очистка истории',
-            text: 'Удалить все серверы из истории? Останется только текущий.',
-            buttons: [
-                {
-                    title: 'Да',
-                    handler: function() {
-                        var current = Lampa.Storage.get('location_server');
-                        saveHistory([current]);
-                        Lampa.Noty.show('✅ История очищена', {timeout: 2000});
-                    }
-                },
-                {
-                    title: 'Нет',
-                    handler: function() {}
-                }
-            ]
-        });
+    function clearHistory() {
+        var current = Lampa.Storage.get('location_server');
+        saveHistory([current]);
+        Lampa.Noty.show('🗑️ История серверов очищена', {timeout: 3000});
     }
 
     function startMe() {
@@ -127,24 +112,17 @@
             addToHistory(currentServer);
         }
         
-        // Переменная для отслеживания долгого нажатия
-        var longPressTimer = null;
-        var isLongPress = false;
+        // Таймер для долгого нажатия
+        var pressTimer = null;
         
         // Обработчик для кнопки быстрого переключения
         $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function(e) {
             e.stopPropagation();
             
-            // Если это было долгое нажатие - ничего не делаем
-            if (isLongPress) {
-                isLongPress = false;
-                return;
-            }
-            
-            // Отменяем таймер долгого нажатия, если он был
-            if (longPressTimer) {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
+            // Если таймер уже запущен - отменяем (чтобы не сработало долгое нажатие)
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
             }
             
             var current = Lampa.Storage.get('location_server');
@@ -180,29 +158,18 @@
         });
 
         // Обработчик для начала нажатия (запускаем таймер долгого нажатия)
-        $('#SERVER_SWITCHER').on('hover:focus', function() {
-            // Запускаем таймер на 1 секунду
-            longPressTimer = setTimeout(function() {
-                isLongPress = true;
-                showClearHistoryDialog();
-            }, 1000);
+        $('#SERVER_SWITCHER').on('mousedown touchstart', function() {
+            pressTimer = setTimeout(function() {
+                clearHistory();
+                pressTimer = null;
+            }, 3000); // 3 секунды
         });
 
-        // Обработчик для снятия фокуса (отменяем таймер)
-        $('#SERVER_SWITCHER').on('hover:blur', function() {
-            if (longPressTimer) {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
-            }
-        });
-
-        // Обработчик для отпускания кнопки (если отпустили раньше времени - отменяем)
-        $(document).on('keyup', function(e) {
-            if (e.code === 'Enter' || e.code === 'Space' || e.code === 'OK') {
-                if (longPressTimer) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
-                }
+        // Обработчик для отпускания кнопки (отменяем таймер)
+        $(document).on('mouseup touchend', function() {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
             }
         });
         
