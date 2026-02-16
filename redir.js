@@ -15,24 +15,20 @@
         Lampa.Storage.set('location_server', DEFAULT_SERVER);
     }
 
-    // ============ ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ РАБОТЫ С ИСТОРИЕЙ ============
+    // ============ ФУНКЦИИ ДЛЯ РАБОТЫ С ИСТОРИЕЙ ============
     function getHistory() {
         try {
             var data = Lampa.Storage.get('server_history');
             if (data) {
-                // Если это уже массив - отлично
                 if (Array.isArray(data)) {
                     return data;
                 }
-                // Если это строка - пробуем распарсить
                 if (typeof data === 'string') {
                     var parsed = JSON.parse(data);
                     if (Array.isArray(parsed)) {
                         return parsed;
                     }
                 }
-                // Если дошли сюда - данные в неправильном формате
-                console.warn('getHistory: данные в неожиданном формате', data);
             }
         } catch(e) {
             console.log('Ошибка парсинга истории, создаем новую');
@@ -72,21 +68,33 @@
     }
     // ========================================================
 
-    function startMe() {
+    // Выносим создание кнопок в отдельную функцию
+    function createButtons() {
+        $('#REDIRECT').remove();
+        $('#SERVER_SWITCHER').remove();
         
-        $('#REDIRECT').remove()
-        
+        // Кнопка редиректа (глобус)
         var domainSVG = icon_server_redirect;
         var domainBUTT = '<div id="REDIRECT" class="head__action selector redirect-screen">' + domainSVG + '</div>';
         
         $('#app > div.head > div > div.head__actions').append(domainBUTT);
         $('#REDIRECT').insertAfter('div[class="head__action selector open--settings"]');
-           
+        
+        // Кнопка быстрого переключения
+        var switcherSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
+        var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Быстрое переключение сервера">' + switcherSVG + '</div>';
+        
+        $('#REDIRECT').after(switcherBUTT);
+        
         if(!Lampa.Storage.get('location_server')) {
-            setTimeout(function(){
-                $('#REDIRECT').remove()
-            }, 10);
+            $('#REDIRECT').hide();
         }
+    }
+
+    function startMe() {
+        
+        // Создаем кнопки
+        createButtons();
         
         // Добавляем текущий сервер в историю
         var currentServer = Lampa.Storage.get('location_server');
@@ -94,66 +102,64 @@
             addToHistory(currentServer);
         }
         
-        // ============ БЫСТРЫЙ ПЕРЕКЛЮЧАТЕЛЬ ============
-        function addQuickSwitcher() {
-            $('#SERVER_SWITCHER').remove();
+        // Обработчик для быстрого переключения
+        $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function(e) {
+            e.stopPropagation(); // Предотвращаем всплытие события
             
-            var switcherSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
-            var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Быстрое переключение сервера">' + switcherSVG + '</div>';
+            var current = Lampa.Storage.get('location_server');
+            if (!current) {
+                Lampa.Noty.show('Сначала укажите сервер в настройках');
+                return;
+            }
             
-            $('#REDIRECT').after(switcherBUTT);
+            var history = getHistory();
             
-            $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function() {
-                var current = Lampa.Storage.get('location_server');
-                if (!current) {
-                    Lampa.Noty.show('Сначала укажите сервер в настройках');
-                    return;
+            // Если истории нет или это не массив - создаем базовую
+            if (!Array.isArray(history) || history.length < 2) {
+                history = [current];
+                if (current !== DEFAULT_SERVER) {
+                    history.push(DEFAULT_SERVER);
+                } else {
+                    history.push('bylampa.online');
                 }
-                
-                var history = getHistory();
-                
-                // Если истории нет или это не массив - создаем базовую
-                if (!Array.isArray(history) || history.length < 2) {
-                    history = [current];
-                    if (current !== DEFAULT_SERVER) {
-                        history.push(DEFAULT_SERVER);
-                    } else {
-                        history.push('bylampa.online');
-                    }
-                    saveHistory(history);
-                }
-                
-                var currentIndex = history.indexOf(current);
-                
-                if (currentIndex === -1) {
-                    history.unshift(current);
-                    if (history.length > 5) history.pop();
-                    saveHistory(history);
-                    currentIndex = 0;
-                }
-                
-                var nextIndex = (currentIndex + 1) % history.length;
-                var nextServer = history[nextIndex];
-                
-                Lampa.Storage.set('location_server', nextServer);
-                
-                // ПОКАЗЫВАЕМ ТОЛЬКО ТЕКУЩИЙ СЕРВЕР НА 3.5 СЕКУНДЫ
-                Lampa.Noty.show('✓ Сервер: ' + nextServer, {timeout: 3500});
-                
-                $('#REDIRECT').remove();
-                startMe();
-            });
+                saveHistory(history);
+            }
             
-            // УБИРАЕМ ПОКАЗ СПИСКА СЕРВЕРОВ - УДАЛЕН БЛОК ДОЛГОГО НАЖАТИЯ
-        }
+            var currentIndex = history.indexOf(current);
+            
+            if (currentIndex === -1) {
+                history.unshift(current);
+                if (history.length > 5) history.pop();
+                saveHistory(history);
+                currentIndex = 0;
+            }
+            
+            var nextIndex = (currentIndex + 1) % history.length;
+            var nextServer = history[nextIndex];
+            
+            // Меняем сервер БЕЗ перезапуска всего плагина
+            Lampa.Storage.set('location_server', nextServer);
+            
+            // Просто обновляем иконку редиректа (если нужно)
+            if(!Lampa.Storage.get('location_server')) {
+                $('#REDIRECT').hide();
+            } else {
+                $('#REDIRECT').show();
+            }
+            
+            // ПОКАЗЫВАЕМ УВЕДОМЛЕНИЕ
+            Lampa.Noty.show('✓ Сервер: ' + nextServer, {timeout: 3500});
+            
+            // НЕ вызываем startMe() заново! 
+            // Фокус остается на кнопке
+        });
         
-        addQuickSwitcher();
-        // ===========================================
-        
+        // Обработчик для основной кнопки (редирект)
         $('#REDIRECT').on('hover:enter hover:click hover:touch', function() {
             window.location.href = server_protocol + Lampa.Storage.get('location_server');
         });
         
+        // Настройки (без изменений)
         Lampa.SettingsApi.addComponent({
             component: 'location_redirect',
             name: 'Смена сервера',
@@ -178,11 +184,17 @@
                     addToHistory(value);
                 }
                 
+                // Просто обновляем видимость кнопки, НЕ перезапускаем всё
                 if (value == '') {
-                    $('#REDIRECT').remove();
+                    $('#REDIRECT').hide();
+                } else {
+                    $('#REDIRECT').show();
                 }
                 
-                startMe();
+                // Обновляем текущий сервер в истории
+                if (value) {
+                    addToHistory(value);
+                }
             }         
         });
         
