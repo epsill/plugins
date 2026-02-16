@@ -82,7 +82,7 @@
         
         // Кнопка быстрого переключения
         var switcherSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
-        var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Быстрое переключение (короткое нажатие) | Очистить историю (долгое нажатие)">' + switcherSVG + '</div>';
+        var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Короткое нажатие: переключить сервер | Долгое нажатие: очистить историю">' + switcherSVG + '</div>';
         
         $('#REDIRECT').after(switcherBUTT);
         
@@ -127,9 +127,25 @@
             addToHistory(currentServer);
         }
         
-        // Обработчик для быстрого переключения (короткое нажатие)
-        $('#SERVER_SWITCHER').on('hover:click', function(e) {
+        // Переменная для отслеживания долгого нажатия
+        var longPressTimer = null;
+        var isLongPress = false;
+        
+        // Обработчик для кнопки быстрого переключения
+        $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function(e) {
             e.stopPropagation();
+            
+            // Если это было долгое нажатие - ничего не делаем
+            if (isLongPress) {
+                isLongPress = false;
+                return;
+            }
+            
+            // Отменяем таймер долгого нажатия, если он был
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
             
             var current = Lampa.Storage.get('location_server');
             if (!current) {
@@ -139,18 +155,16 @@
             
             var history = getHistory();
             
-            // Проверяем, есть ли в истории хотя бы два разных сервера
             // Убираем дубликаты для подсчёта уникальных
             var uniqueHistory = [...new Set(history)];
             
             if (uniqueHistory.length < 2) {
-                Lampa.Noty.show('Добавьте ещё сервер в настройках', {timeout: 3000});
+                Lampa.Noty.show('➕ Добавьте ещё сервер в настройках', {timeout: 3000});
                 return;
             }
             
             var currentIndex = history.indexOf(current);
             if (currentIndex === -1) {
-                // Такого не должно быть, но на всякий случай добавим текущий
                 history.unshift(current);
                 if (history.length > 5) history.pop();
                 saveHistory(history);
@@ -163,14 +177,33 @@
             Lampa.Storage.set('location_server', nextServer);
             
             Lampa.Noty.show('✓ Сервер: ' + nextServer + ' (HTTP)', {timeout: 3500});
-            
-            // Фокус остаётся на кнопке
         });
 
-        // Обработчик для долгого нажатия (очистка истории)
-        $('#SERVER_SWITCHER').on('hover:long_touch', function(e) {
-            e.stopPropagation();
-            showClearHistoryDialog();
+        // Обработчик для начала нажатия (запускаем таймер долгого нажатия)
+        $('#SERVER_SWITCHER').on('hover:focus', function() {
+            // Запускаем таймер на 1 секунду
+            longPressTimer = setTimeout(function() {
+                isLongPress = true;
+                showClearHistoryDialog();
+            }, 1000);
+        });
+
+        // Обработчик для снятия фокуса (отменяем таймер)
+        $('#SERVER_SWITCHER').on('hover:blur', function() {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        });
+
+        // Обработчик для отпускания кнопки (если отпустили раньше времени - отменяем)
+        $(document).on('keyup', function(e) {
+            if (e.code === 'Enter' || e.code === 'Space' || e.code === 'OK') {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }
         });
         
         // Обработчик для основной кнопки (редирект)
@@ -202,6 +235,7 @@
             onChange: function (value) {
                 if (value && value.trim() !== '') {
                     value = value.replace(/^https?:\/\//, '');
+                    Lampa.Storage.set('location_server', value);
                     addToHistory(value);
                 }
                 
@@ -209,10 +243,6 @@
                     $('#REDIRECT').hide();
                 } else {
                     $('#REDIRECT').show();
-                }
-                
-                if (value) {
-                    addToHistory(value);
                 }
             }         
         });
