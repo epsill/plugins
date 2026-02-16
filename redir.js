@@ -82,7 +82,7 @@
         
         // Кнопка быстрого переключения
         var switcherSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
-        var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Короткое нажатие: переключить сервер | Долгое нажатие (3 сек): очистить историю">' + switcherSVG + '</div>';
+        var switcherBUTT = '<div id="SERVER_SWITCHER" class="head__action selector server-switcher" title="Короткое нажатие: переключить сервер | Долгое нажатие: очистить историю">' + switcherSVG + '</div>';
         
         $('#REDIRECT').after(switcherBUTT);
         
@@ -99,13 +99,23 @@
     }
 
     function clearHistory() {
+        console.log('=== ФУНКЦИЯ clearHistory ВЫЗВАНА ===');
         var current = Lampa.Storage.get('location_server');
+        console.log('Текущий сервер:', current);
+        
+        // Сохраняем только текущий сервер
         saveHistory([current]);
+        
+        // Проверяем, что сохранилось
+        var newHistory = getHistory();
+        console.log('Новая история:', newHistory);
+        
         Lampa.Noty.show('🗑️ История серверов очищена', {timeout: 3000});
-        console.log('История очищена, остался только:', current);
     }
 
     function startMe() {
+        console.log('Плагин запущен');
+        
         createButtons();
         
         var currentServer = Lampa.Storage.get('location_server');
@@ -113,21 +123,15 @@
             addToHistory(currentServer);
         }
         
-        // Флаг для отслеживания долгого нажатия
-        var longPressActive = false;
-        var pressTimer = null;
+        console.log('Текущая история:', getHistory());
         
-        // Стандартный обработчик для короткого нажатия
+        // ============ ПРОСТЫЕ ОБРАБОТЧИКИ ============
+        
+        // Короткое нажатие - переключение сервера
         $('#SERVER_SWITCHER').on('hover:enter', function(e) {
+            console.log('*** Сработало hover:enter (короткое нажатие) ***');
             e.stopPropagation();
             
-            // Если было долгое нажатие - игнорируем
-            if (longPressActive) {
-                longPressActive = false;
-                return;
-            }
-            
-            // Переключение сервера
             var current = Lampa.Storage.get('location_server');
             if (!current) {
                 Lampa.Noty.show('Сначала укажите сервер в настройках');
@@ -155,16 +159,27 @@
             
             Lampa.Storage.set('location_server', nextServer);
             Lampa.Noty.show('✓ Сервер: ' + nextServer + ' (HTTP)', {timeout: 3500});
+            
+            console.log('Переключено на:', nextServer);
         });
         
-        // Отдельный обработчик для долгого нажатия
+        // Долгое нажатие - очистка истории
         $('#SERVER_SWITCHER').on('hover:long_touch', function(e) {
+            console.log('!!! Сработало hover:long_touch (ДОЛГОЕ нажатие) !!!');
             e.stopPropagation();
             e.preventDefault();
             
-            console.log('Долгое нажатие сработало!');
-            longPressActive = true;
+            // Очищаем историю
             clearHistory();
+        });
+        
+        // Для диагностики - ловим все события
+        $('#SERVER_SWITCHER').on('hover:click', function() {
+            console.log('hover:click');
+        });
+        
+        $('#SERVER_SWITCHER').on('hover:touch', function() {
+            console.log('hover:touch');
         });
         
         // Обработчик для основной кнопки (редирект)
