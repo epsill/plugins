@@ -1,6 +1,6 @@
 (function() {
     'use strict';
-
+    
     Lampa.Platform.tv();
     
     var server_protocol = location.protocol === "https:" ? 'https://' : 'http://' ;
@@ -15,15 +15,24 @@
         Lampa.Storage.set('location_server', DEFAULT_SERVER);
     }
 
-    // ============ ФУНКЦИИ ДЛЯ РАБОТЫ С ИСТОРИЕЙ ============
+    // ============ ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ РАБОТЫ С ИСТОРИЕЙ ============
     function getHistory() {
         try {
             var data = Lampa.Storage.get('server_history');
             if (data) {
+                // Если это уже массив - отлично
                 if (Array.isArray(data)) {
                     return data;
                 }
-                return JSON.parse(data);
+                // Если это строка - пробуем распарсить
+                if (typeof data === 'string') {
+                    var parsed = JSON.parse(data);
+                    if (Array.isArray(parsed)) {
+                        return parsed;
+                    }
+                }
+                // Если дошли сюда - данные в неправильном формате
+                console.warn('getHistory: данные в неожиданном формате', data);
             }
         } catch(e) {
             console.log('Ошибка парсинга истории, создаем новую');
