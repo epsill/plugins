@@ -102,6 +102,7 @@
         var current = Lampa.Storage.get('location_server');
         saveHistory([current]);
         Lampa.Noty.show('🗑️ История серверов очищена', {timeout: 3000});
+        console.log('История очищена, остался только:', current);
     }
 
     function startMe() {
@@ -114,12 +115,21 @@
         
         // Таймер для долгого нажатия
         var pressTimer = null;
+        var isLongPress = false;
         
-        // Обработчик для кнопки быстрого переключения
+        // Переопределяем обработчик для кнопки быстрого переключения
+        $('#SERVER_SWITCHER').off('hover:enter hover:click hover:touch');
+        
         $('#SERVER_SWITCHER').on('hover:enter hover:click hover:touch', function(e) {
             e.stopPropagation();
             
-            // Если таймер уже запущен - отменяем (чтобы не сработало долгое нажатие)
+            // Если это долгое нажатие - игнорируем
+            if (isLongPress) {
+                isLongPress = false;
+                return;
+            }
+            
+            // Отменяем таймер, если он был
             if (pressTimer) {
                 clearTimeout(pressTimer);
                 pressTimer = null;
@@ -157,20 +167,39 @@
             Lampa.Noty.show('✓ Сервер: ' + nextServer + ' (HTTP)', {timeout: 3500});
         });
 
-        // Обработчик для начала нажатия (запускаем таймер долгого нажатия)
-        $('#SERVER_SWITCHER').on('mousedown touchstart', function() {
-            pressTimer = setTimeout(function() {
-                clearHistory();
-                pressTimer = null;
-            }, 3000); // 3 секунды
+        // Отслеживаем нажатия на пульте для долгого нажатия
+        Lampa.Keypad.listener.follow("keydown", function (e) {
+            // Если нажата кнопка OK/Enter (код 13 или Enter)
+            if (e.keyCode === 13 || e.code === 'Enter' || e.code === 'OK') {
+                // Проверяем, находится ли фокус на нашей кнопке
+                if ($('#SERVER_SWITCHER').is(':focus')) {
+                    // Запускаем таймер на 3 секунды
+                    if (pressTimer) clearTimeout(pressTimer);
+                    pressTimer = setTimeout(function() {
+                        isLongPress = true;
+                        clearHistory();
+                        pressTimer = null;
+                    }, 3000);
+                }
+            }
         });
 
-        // Обработчик для отпускания кнопки (отменяем таймер)
-        $(document).on('mouseup touchend', function() {
+        // Отслеживаем отпускание кнопки
+        Lampa.Keypad.listener.follow("keyup", function (e) {
+            if ((e.keyCode === 13 || e.code === 'Enter' || e.code === 'OK') && pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+                // Не сбрасываем isLongPress здесь, так как он нужен для обработчика выше
+            }
+        });
+
+        // Сбрасываем флаг при потере фокуса
+        $('#SERVER_SWITCHER').on('hover:blur', function() {
             if (pressTimer) {
                 clearTimeout(pressTimer);
                 pressTimer = null;
             }
+            isLongPress = false;
         });
         
         // Обработчик для основной кнопки (редирект)
@@ -227,6 +256,7 @@
             }
         });
 
+        // Слушаем кнопку ВНИЗ для отключения постоянного редиректа
         Lampa.Keypad.listener.follow("keydown", function (e) {
             if (e.code === 40 || e.code === 29461) {
                 Lampa.Storage.set('const_redirect', false);
