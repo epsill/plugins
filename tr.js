@@ -19,14 +19,13 @@
 
     // --- Функция остановки TorrServer ---
     function stopTorrServer() {
-        log('Пытаемся остановить TorrServer...');
+        log('🛑 Остановка TorrServer...');
         
         if (typeof webOS === 'undefined' || !webOS.service) {
             log('webOS API не доступен');
             return;
         }
         
-        // Пробуем закрыть приложение через webOS
         webOS.service.request('luna://com.webos.applicationManager', {
             method: 'close',
             parameters: { 
@@ -36,9 +35,9 @@
                 log('✅ TorrServer успешно остановлен');
             },
             onFailure: function(error) {
-                log('❌ Не удалось остановить TorrServer:', error.errorText);
+                log('❌ Ошибка остановки:', error.errorText);
                 
-                // Если не вышло через webOS, пробуем HTTP (на всякий случай)
+                // Пробуем HTTP как запасной вариант
                 const xhr = new XMLHttpRequest();
                 xhr.open('GET', SERVER_URL + '/shutdown', true);
                 xhr.timeout = 2000;
@@ -64,7 +63,7 @@
         };
 
         xhr.onerror = function() {
-            log('Сервер не доступен (сетевая ошибка)');
+            log('Сервер не доступен');
             callbackFail();
         };
 
@@ -94,12 +93,12 @@
                 log('✅ TorrServer запущен');
             },
             onFailure: function(error) {
-                log('❌ Ошибка запуска:', error.errorText || 'Неизвестная ошибка');
+                log('❌ Ошибка запуска:', error.errorText);
             }
         });
     }
 
-    // --- Основная логика проверки (как и раньше) ---
+    // --- Основная логика проверки ---
     function performChecks(attempt = 1) {
         log(`Проверка сервера (попытка ${attempt}/${MAX_RETRIES})...`);
 
@@ -119,42 +118,58 @@
         );
     }
 
-    // --- ГЛАВНОЕ: Подписка на закрытие приложения ---
+    // --- ИСПРАВЛЕННЫЙ обработчик закрытия ---
     function setupCloseHandler() {
         log('Настраиваем обработчик закрытия...');
-        
-        // Следим за активностями Lampa [citation:2]
-        Lampa.Listener.follow('activity', function(event) {
-            // Когда пользователь нажимает "Закрыть приложение"
-            if (event.type === 'close' || event.activity === 'close') {
-                log('Обнаружено закрытие Lampa');
+
+        // Вариант 1: Перехватываем нажатие на кнопку выхода
+        $(document).on('hover:enter', '[data-action="exit_r"]', function() {
+            log('🔴 Нажата кнопка выхода');
+            stopTorrServer();
+            
+            // Даем время на остановку сервера (200мс)
+            setTimeout(function() {
+                // Продолжаем стандартный выход
+                Lampa.Activity.out();
+                if (Lampa.Platform.is('webos')) window.close();
+            }, 200);
+        });
+
+        // Вариант 2: Следим за событием выхода (как в плагине exit)
+        Lampa.Listener.follow('app', function(event) {
+            if (event.type === 'exit' || event.type === 'stop') {
+                log('🔴 Получено событие выхода');
                 stopTorrServer();
             }
         });
-        
-        // Альтернативный вариант - следить за активностью напрямую
-        if (Lampa.Activity) {
-            Lampa.Activity.on('destroy', function() {
-                log('Активность уничтожена');
+
+        // Вариант 3: Перехватываем platform.exit если он существует
+        if (Lampa.Platform && Lampa.Platform.exit) {
+            var originalExit = Lampa.Platform.exit;
+            Lampa.Platform.exit = function() {
+                log('🔴 Вызов platform.exit');
                 stopTorrServer();
-            });
+                originalExit.apply(Lampa.Platform, arguments);
+            };
         }
     }
 
     // --- Запуск плагина ---
     log('Плагин загружен');
     
-    // Ждём готовности Lampa [citation:1]
-    if (window.appready) {
-        log('Lampa готова, инициализация...');
+    // Ждем загрузки DOM и Lampa
+    function init() {
+        log('Инициализация...');
         performChecks();
         setupCloseHandler();
+    }
+
+    if (window.appready && document.readyState === 'complete') {
+        init();
     } else {
         Lampa.Listener.follow('app', function(event) {
             if (event.type === 'ready') {
-                log('Lampa готова (событие), инициализация...');
-                performChecks();
-                setupCloseHandler();
+                setTimeout(init, 500); // Небольшая задержка для загрузки DOM
             }
         });
     }
