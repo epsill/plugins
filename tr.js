@@ -1,4 +1,4 @@
-function () {
+(function() {
     'use strict';
 
     if (!Lampa.Platform.tv()) {
@@ -158,4 +158,4 @@ function () {
             }
         });
     }
-}
+})();
